@@ -10,7 +10,7 @@ TranslateDu(번역두)는 한문 불교 문헌을 입력하면, Gemini AI를 활
 
 ## 바로 사용하기
 
-### 👉 [TranslateDu 실행하기](https://본인아이디.github.io/TranslateDu/)
+### 👉 [TranslateDu 실행하기](https://HMSeodam.github.io/TranslateDu/)
 
 브라우저에서 위 링크를 클릭하면 바로 사용할 수 있습니다.
 설치나 다운로드가 필요 없습니다.
