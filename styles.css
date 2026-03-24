@@ -1,0 +1,843 @@
+/**
+ * styles.css
+ * ──────────────────────────────────────────────
+ * 학술용 도구 느낌의 단정한 스타일.
+ * - 과도한 애니메이션 금지
+ * - 한국어 가독성 좋은 폰트 스택
+ * - 데스크탑 우선, 반응형 지원
+ * - 카드/배지/태그 중심 레이아웃
+ */
+
+/* ───────── 기본 리셋 및 폰트 ───────── */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --color-bg: #f8f9fa;
+  --color-surface: #ffffff;
+  --color-text: #212529;
+  --color-text-secondary: #6c757d;
+  --color-border: #dee2e6;
+  --color-primary: #2c5282;
+  --color-primary-light: #ebf4ff;
+  --color-accent: #c05621;
+  --color-accent-light: #fefcbf;
+  --color-success: #276749;
+  --color-success-bg: #f0fff4;
+  --color-warning: #975a16;
+  --color-warning-bg: #fffff0;
+  --color-error: #c53030;
+  --color-error-bg: #fff5f5;
+  --color-info: #2b6cb0;
+  --color-info-bg: #ebf8ff;
+  --color-buddhist: #805ad5;
+  --color-buddhist-bg: #faf5ff;
+  --font-stack: 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont,
+    'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-hanja: 'Noto Serif KR', 'Batang', serif;
+  --radius: 6px;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+html {
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+body {
+  font-family: var(--font-stack);
+  color: var(--color-text);
+  background: var(--color-bg);
+  min-height: 100vh;
+}
+
+
+/* ───────── 레이아웃 ───────── */
+
+.app-container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid var(--color-border);
+}
+
+header h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 0.25rem;
+}
+
+header .subtitle {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+
+/* ───────── 입력 섹션 ───────── */
+
+.input-section {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.input-section label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+  color: var(--color-text);
+}
+
+.input-section textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 0.75rem;
+  font-family: var(--font-hanja);
+  font-size: 1.1rem;
+  line-height: 1.8;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.input-section textarea:focus {
+  border-color: var(--color-primary);
+}
+
+
+/* ───────── 탭 버튼 ───────── */
+
+.tab-group {
+  display: flex;
+  gap: 0;
+  margin-bottom: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 0.6rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  background: var(--color-surface);
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  transition: background 0.2s, color 0.2s;
+}
+
+.tab-btn:not(:last-child) {
+  border-right: 1px solid var(--color-border);
+}
+
+.tab-btn.active {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.tab-btn:hover:not(.active) {
+  background: var(--color-primary-light);
+}
+
+
+/* ───────── API Key 입력 ───────── */
+
+.api-key-group {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  align-items: center;
+}
+
+.api-key-group input {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  outline: none;
+}
+
+.api-key-group input:focus {
+  border-color: var(--color-primary);
+}
+
+.api-key-group button {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.model-select {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  outline: none;
+  cursor: pointer;
+  margin-top: 0.25rem;
+}
+
+.model-select:focus {
+  border-color: var(--color-primary);
+}
+
+
+/* ───────── 실행 버튼 ───────── */
+
+.action-group {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.btn-primary {
+  padding: 0.65rem 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.btn-primary:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  padding: 0.65rem 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background: var(--color-bg);
+}
+
+
+/* ───────── 상태 메시지 ───────── */
+
+#status-area {
+  max-height: 200px;
+  overflow-y: auto;
+  margin: 1rem 0;
+  font-size: 0.8rem;
+  font-family: monospace;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 0.75rem;
+  display: none;
+}
+
+#status-area:not(:empty) {
+  display: block;
+}
+
+.status-line {
+  padding: 0.15rem 0;
+}
+
+.status-info { color: var(--color-info); }
+.status-success { color: var(--color-success); }
+.status-warning { color: var(--color-warning); }
+.status-error { color: var(--color-error); }
+
+
+/* ───────── 직접 입력 안내 ───────── */
+
+.manual-info {
+  background: var(--color-info-bg);
+  border: 1px solid #bee3f8;
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  color: var(--color-info);
+  margin-bottom: 1rem;
+}
+
+
+/* ───────── 결과 섹션 ───────── */
+
+#results-section {
+  display: none;
+}
+
+.result-block {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.result-block h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+
+/* ───────── 폴백 안내 ───────── */
+
+.fallback-notice {
+  background: var(--color-warning-bg);
+  border: 1px solid #f6e05e;
+  border-left: 4px solid var(--color-warning);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.875rem;
+}
+
+.fallback-notice strong {
+  color: var(--color-warning);
+}
+
+.fallback-notice p {
+  margin-top: 0.5rem;
+  color: var(--color-text-secondary);
+}
+
+
+/* ───────── 절(句) 분리 ───────── */
+
+.clause-section {
+  margin-bottom: 1rem;
+}
+
+.clause-section h4 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.clause-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.clause-tag {
+  display: inline-block;
+  padding: 0.35rem 0.75rem;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  font-family: var(--font-hanja);
+}
+
+
+/* ───────── 토큰 박스 ───────── */
+
+.token-section h4 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin-bottom: 0.75rem;
+}
+
+.token-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.token-box {
+  position: relative;
+  min-width: 80px;
+  padding: 0.6rem 0.75rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.token-box.buddhist-term {
+  border-color: var(--color-buddhist);
+  background: var(--color-buddhist-bg);
+}
+
+.token-surface {
+  font-family: var(--font-hanja);
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 0.3rem;
+}
+
+.token-box.buddhist-term .token-surface {
+  color: var(--color-buddhist);
+}
+
+.token-gloss {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 0.3rem;
+}
+
+.token-pos, .token-func {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+  justify-content: center;
+  margin-bottom: 0.2rem;
+}
+
+.pos-tag {
+  display: inline-block;
+  padding: 0.1rem 0.4rem;
+  font-size: 0.65rem;
+  background: #e2e8f0;
+  color: #4a5568;
+  border-radius: 3px;
+}
+
+.func-tag {
+  display: inline-block;
+  padding: 0.1rem 0.4rem;
+  font-size: 0.65rem;
+  background: #fefcbf;
+  color: #975a16;
+  border-radius: 3px;
+}
+
+
+/* ───────── confidence 배지 ───────── */
+
+.conf-badge {
+  display: inline-block;
+  padding: 0.1rem 0.4rem;
+  font-size: 0.6rem;
+  font-weight: 600;
+  border-radius: 3px;
+  margin-top: 0.2rem;
+}
+
+.conf-high {
+  background: #c6f6d5;
+  color: var(--color-success);
+}
+
+.conf-medium {
+  background: #fefcbf;
+  color: var(--color-warning);
+}
+
+.conf-low {
+  background: #fed7d7;
+  color: var(--color-error);
+}
+
+.conf-unknown {
+  background: #e2e8f0;
+  color: var(--color-text-secondary);
+}
+
+
+/* ───────── 불교 용어 마크 ───────── */
+
+.buddhist-mark {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  font-size: 0.55rem;
+  color: var(--color-buddhist);
+  font-weight: 700;
+}
+
+
+/* ───────── 토큰 모호성 표시 ───────── */
+
+.token-ambiguity {
+  font-size: 0.65rem;
+  color: var(--color-accent);
+  margin-top: 0.2rem;
+  text-align: left;
+}
+
+
+/* ───────── 번역 블록 ───────── */
+
+.sentence-type {
+  margin-bottom: 0.75rem;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+.translation-block {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  margin-bottom: 0.75rem;
+}
+
+.translation-block h4 {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin-bottom: 0.4rem;
+}
+
+.translation-block p {
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+.translation-block.literal {
+  background: var(--color-info-bg);
+  border-left: 3px solid var(--color-info);
+}
+
+.translation-block.idiomatic {
+  background: var(--color-success-bg);
+  border-left: 3px solid var(--color-success);
+}
+
+.translation-block.revised {
+  background: var(--color-accent-light);
+  border-left: 3px solid var(--color-accent);
+}
+
+.grammar-points, .buddhist-notes {
+  margin-top: 0.75rem;
+}
+
+.grammar-points h4, .buddhist-notes h4 {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin-bottom: 0.4rem;
+}
+
+.grammar-points ul, .buddhist-notes ul {
+  padding-left: 1.25rem;
+  font-size: 0.85rem;
+  color: var(--color-text);
+}
+
+.grammar-points li, .buddhist-notes li {
+  margin-bottom: 0.3rem;
+}
+
+
+/* ───────── Alignment 테이블 ───────── */
+
+.alignment-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.alignment-table th {
+  background: var(--color-bg);
+  padding: 0.5rem 0.6rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  border-bottom: 2px solid var(--color-border);
+}
+
+.alignment-table td {
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+
+.align-source {
+  font-family: var(--font-hanja);
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.align-arrow {
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: 1rem;
+}
+
+.align-target {
+  color: var(--color-text);
+}
+
+.align-reason {
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+}
+
+.relation-badge {
+  display: inline-block;
+  padding: 0.1rem 0.4rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  border-radius: 3px;
+  background: #e2e8f0;
+  color: #4a5568;
+}
+
+.relation-1-1 { background: #c6f6d5; color: var(--color-success); }
+.relation-1-N { background: #bee3f8; color: var(--color-info); }
+.relation-N-1 { background: #fefcbf; color: var(--color-warning); }
+.relation-omitted { background: #fed7d7; color: var(--color-error); }
+.relation-expanded { background: #e9d8fd; color: var(--color-buddhist); }
+
+
+/* ───────── 문장 구조 해설 ───────── */
+
+.component-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.component-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.component-header {
+  background: var(--color-bg);
+  padding: 0.4rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.component-body {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.verification-issues, .final-notes {
+  margin-top: 0.75rem;
+}
+
+.verification-issues h4, .final-notes h4 {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin-bottom: 0.4rem;
+}
+
+.verification-issues ul, .final-notes ul {
+  padding-left: 1.25rem;
+  font-size: 0.85rem;
+}
+
+.verification-issues li {
+  color: var(--color-accent);
+  margin-bottom: 0.2rem;
+}
+
+
+/* ───────── 핵심 어휘 카드 ───────── */
+
+.vocab-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.75rem;
+}
+
+.vocab-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 0.75rem;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+  background: var(--color-surface);
+}
+
+.vocab-card.vocab-buddhist {
+  border-color: var(--color-buddhist);
+  background: var(--color-buddhist-bg);
+}
+
+.vocab-char {
+  font-family: var(--font-hanja);
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 0.3rem;
+}
+
+.vocab-card.vocab-buddhist .vocab-char {
+  color: var(--color-buddhist);
+}
+
+.vocab-reading {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 0.3rem;
+}
+
+.vocab-gloss {
+  font-size: 0.8rem;
+  color: var(--color-text);
+  margin-bottom: 0.3rem;
+  font-weight: 600;
+}
+
+.vocab-buddhist-meaning {
+  font-size: 0.7rem;
+  color: var(--color-buddhist);
+  line-height: 1.4;
+  margin-bottom: 0.3rem;
+}
+
+.vocab-pos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+  justify-content: center;
+  margin-bottom: 0.3rem;
+}
+
+.vocab-badge {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.6rem;
+  font-weight: 700;
+  background: var(--color-buddhist);
+  color: #fff;
+  border-radius: 3px;
+}
+
+
+/* ───────── 현토(懸吐) 표시 ───────── */
+
+.hyeonto-mark {
+  color: var(--color-accent);
+  font-family: var(--font-stack);
+  font-size: 0.65em;
+  font-weight: 600;
+  vertical-align: baseline;
+  margin-left: 1px;
+}
+
+
+/* ───────── 다운로드 영역 ───────── */
+
+.download-area {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  padding: 1.25rem;
+  margin-top: 0.5rem;
+  border-top: 1px solid var(--color-border);
+}
+
+
+/* ───────── 푸터 ───────── */
+
+footer {
+  text-align: center;
+  padding: 1.5rem 0;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  border-top: 1px solid var(--color-border);
+  margin-top: 2rem;
+}
+
+.empty-msg {
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+
+/* ───────── 반응형 ───────── */
+
+@media (max-width: 768px) {
+  .app-container {
+    padding: 1rem;
+  }
+
+  header h1 {
+    font-size: 1.25rem;
+  }
+
+  .component-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .vocab-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+
+  .alignment-table {
+    font-size: 0.75rem;
+  }
+
+  .api-key-group {
+    flex-direction: column;
+  }
+
+  .api-key-group input {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .token-grid {
+    gap: 0.3rem;
+  }
+
+  .token-box {
+    min-width: 60px;
+    padding: 0.4rem 0.5rem;
+  }
+
+  .token-surface {
+    font-size: 1.1rem;
+  }
+}
