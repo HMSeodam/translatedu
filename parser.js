@@ -20,7 +20,7 @@ const AVAILABLE_MODELS = [
   { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro (무료, 고품질)' },
   { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash (6월 퇴역 예정)' }
 ];
-const MAX_RETRY = 2;       // JSON 파싱 실패 시 재시도 횟수
+const MAX_RETRY = 3;       // JSON 파싱 실패 시 재시도 횟수
 const RETRY_DELAY_MS = 1000;
 const QUOTA_RETRY_DELAYS = [5000, 10000, 20000]; // 429 에러 시 백오프 딜레이 (5초, 10초, 20초)
 
@@ -199,7 +199,7 @@ async function callGeminiApi(apiKey, systemPrompt, userPrompt, onStatus) {
     generationConfig: {
       temperature: 0.1,        // 분석 정확도 우선 → 낮은 temperature
       topP: 0.8,
-      maxOutputTokens: 8192,
+      maxOutputTokens: 16384,
       responseMimeType: 'application/json'  // JSON 전용 응답 요청
     }
   };
@@ -359,8 +359,11 @@ async function firstPassAnalysis(inputText, glossaryHints, apiKey, onStatus) {
     try {
       let systemMsg = SYSTEM_PROMPT;
       if (attempt > 0) {
-        // 재시도 시 더 강한 JSON 지시
-        systemMsg += '\n\n중요: 반드시 유효한 JSON만 출력하라. 설명문, 코드 펜스, 기타 텍스트를 절대 포함하지 마라. JSON 객체 하나만 출력하라.';
+        // 재시도 시 더 강한 JSON 지시 + few-shot 제거로 토큰 절약
+        systemMsg += '\n\n중요: 반드시 유효한 JSON만 출력하라. 설명문, 코드 펜스, 기타 텍스트를 절대 포함하지 마라. JSON 객체 하나만 출력하라. 응답이 잘리지 않도록 각 필드를 간결하게 작성하라.';
+        if (typeof onStatus === 'function') {
+          onStatus(`JSON 파싱 실패. 재시도 중... (${attempt}/${MAX_RETRY})`, 'warning');
+        }
         debugLog(`1차 분석 재시도 ${attempt}/${MAX_RETRY}`);
       }
 

@@ -49,6 +49,8 @@ function normalizeInput(text) {
  * 모델 응답에서 JSON만 안전하게 추출.
  * - 코드 펜스(```json … ```) 안의 내용 추출
  * - 중괄호로 시작하는 JSON 블록 추출
+ * - JSON 내부 제어문자 정리
+ * - 잘린 JSON 복구 시도
  * - 실패 시 null 반환
  * @param {string} rawText
  * @returns {object|null}
@@ -56,34 +58,102 @@ function normalizeInput(text) {
 function safeParseJson(rawText) {
   if (!rawText || typeof rawText !== 'string') return null;
 
+  /**
+   * JSON 문자열 내부의 문제를 정리하고 파싱 시도.
+   * - 문자열 값 안의 실제 줄바꿈을 \\n으로 치환
+   * - 제어문자 제거
+   */
+  function cleanAndParse(text) {
+    // 1차: 그대로 시도
+    try {
+      return JSON.parse(text);
+    } catch (e) {
+      // 실패하면 정리 후 재시도
+    }
+
+    // 2차: JSON 문자열 내부의 줄바꿈/탭을 이스케이프
+    let cleaned = text;
+    // 문자열 값 안의 실제 개행을 \\n으로 치환
+    cleaned = cleaned.replace(/"((?:[^"\\]|\\.)*)"/g, (match) => {
+      return match
+        .replace(/\n/g, '\\n')
+        .replace(/\r/g, '\\r')
+        .replace(/\t/g, '\\t');
+    });
+    try {
+      return JSON.parse(cleaned);
+    } catch (e) {
+      // 계속 시도
+    }
+
+    // 3차: 제어문자 전부 제거 (문자열 외부)
+    cleaned = text.replace(/[\x00-\x1F\x7F]/g, ' ');
+    try {
+      return JSON.parse(cleaned);
+    } catch (e) {
+      // 실패
+    }
+
+    return null;
+  }
+
+  /**
+   * 잘린 JSON을 닫는 괄호로 복구 시도.
+   */
+  function tryRepairTruncated(text) {
+    let repaired = text.trim();
+    // 열린 중괄호/대괄호 수 세기
+    let braces = 0, brackets = 0;
+    let inString = false, escaped = false;
+    for (const ch of repaired) {
+      if (escaped) { escaped = false; continue; }
+      if (ch === '\\') { escaped = true; continue; }
+      if (ch === '"') { inString = !inString; continue; }
+      if (inString) continue;
+      if (ch === '{') braces++;
+      else if (ch === '}') braces--;
+      else if (ch === '[') brackets++;
+      else if (ch === ']') brackets--;
+    }
+    // 닫는 괄호 부족분 추가
+    while (brackets > 0) { repaired += ']'; brackets--; }
+    while (braces > 0) { repaired += '}'; braces--; }
+    return cleanAndParse(repaired);
+  }
+
   // 1) 코드 펜스 안의 JSON 추출
   const fenceMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)```/);
   if (fenceMatch) {
-    try {
-      return JSON.parse(fenceMatch[1].trim());
-    } catch (e) {
-      debugLog('코드 펜스 JSON 파싱 실패', e.message);
-    }
+    const result = cleanAndParse(fenceMatch[1].trim());
+    if (result) return result;
+    debugLog('코드 펜스 JSON 파싱 실패');
   }
 
   // 2) 첫 번째 { ~ 마지막 } 블록 추출
   const startIdx = rawText.indexOf('{');
   const endIdx = rawText.lastIndexOf('}');
   if (startIdx !== -1 && endIdx > startIdx) {
-    try {
-      return JSON.parse(rawText.substring(startIdx, endIdx + 1));
-    } catch (e) {
-      debugLog('중괄호 블록 JSON 파싱 실패', e.message);
-    }
+    const block = rawText.substring(startIdx, endIdx + 1);
+    const result = cleanAndParse(block);
+    if (result) return result;
+    debugLog('중괄호 블록 JSON 파싱 실패');
   }
 
   // 3) 전체 문자열 시도
-  try {
-    return JSON.parse(rawText.trim());
-  } catch (e) {
-    debugLog('전체 텍스트 JSON 파싱 실패', e.message);
+  const result = cleanAndParse(rawText.trim());
+  if (result) return result;
+
+  // 4) 잘린 JSON 복구 시도 (모델이 maxOutputTokens에 걸려 중간에 끊긴 경우)
+  if (startIdx !== -1) {
+    const truncated = rawText.substring(startIdx);
+    const repaired = tryRepairTruncated(truncated);
+    if (repaired) {
+      debugLog('잘린 JSON 복구 성공');
+      return repaired;
+    }
   }
 
+  debugLog('모든 JSON 파싱 시도 실패');
   return null;
 }
 
