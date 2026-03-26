@@ -1,8 +1,8 @@
-# TranslateDu
+# TranslateDu 번역두
 
 **한문 불교 문헌 구조 분석 · 번역 학습 도구**
 
-TranslateDu는 한문 불교 문헌을 입력하면, Gemini AI를 활용하여 문장 구조 분석, 한국어 번역, 불교 용어 해설을 자동으로 수행하는 학습 도구입니다.
+TranslateDu(번역두)는 한문 불교 문헌을 입력하면, Gemini AI를 활용하여 문장 구조 분석, 한국어 번역, 불교 용어 해설을 자동으로 수행하는 학습 도구입니다.
 
 > ⚠️ 분석 결과는 학술적 참고용이며, 최종 판단은 연구자의 몫입니다.
 
@@ -147,7 +147,17 @@ TranslateDu/
 
 ## 라이선스
 
-MIT License
+[![License: CC BY-NC-ND 4.0](https://img.shields.io/badge/License-CC%20BY--NC--ND%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-nd/4.0/)
+
+Copyright (c) 2026 **서담 한민수 (Han Minsu), 동명대학교 (Tongmyong University)**
+
+이 프로젝트는 [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/) 라이선스를 따릅니다.
+
+- ✅ 저작자 표시 조건 하에 공유·복제 허용
+- ❌ 상업적 이용 금지
+- ❌ 변형·2차 저작물 배포 금지
+
+상업적 이용 또는 변경 배포를 원하시는 경우 저작자에게 별도 문의하시기 바랍니다.
 
 ---
 
