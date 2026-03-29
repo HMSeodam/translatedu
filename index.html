@@ -26,7 +26,7 @@
 
   <!-- ───────── 헤더 ───────── -->
   <header>
-    <h1>TranslateDu</h1>
+    <h1>TranslateDu <span class="version-badge">v2.1</span></h1>
     <p class="subtitle" data-i18n="subtitle">한문 불교 문헌 구조 분석 · 번역 학습 도구</p>
   </header>
 
@@ -35,6 +35,9 @@
     <div class="input-label-row">
       <label for="input-text" data-i18n="input_label">한문 원문 입력</label>
       <div class="input-tools-group">
+        <button id="ocr-btn" class="btn-ocr" type="button" data-i18n="btn_ocr" data-i18n-title="btn_ocr_title" title="이미지에서 한문 추출">
+          📷 이미지 입력
+        </button>
         <button id="handwriting-btn" class="btn-handwriting" type="button" data-i18n="btn_handwriting" data-i18n-title="btn_handwriting_title" title="한자 필기 입력">
            필기 입력
         </button>
@@ -155,6 +158,7 @@
 </div>
 
 <!-- ───────── 스크립트 로드 (의존성 순서 준수) ───────── -->
+<script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
 <script src="utils.js"></script>
 <script src="glossary.js"></script>
 <script src="i18n.js"></script>
@@ -163,6 +167,7 @@
 <script src="parser.js"></script>
 <script src="renderer.js"></script>
 <script src="handwriting.js"></script>
+<script src="ocr.js"></script>
 <script src="app.js"></script>
 
 </body>

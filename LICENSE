@@ -24,3 +24,24 @@ This work is licensed under the Creative Commons Attribution-NonCommercial-NoDer
 
 전문 보기 / Full license text:
 https://creativecommons.org/licenses/by-nc-nd/4.0/legalcode
+
+---
+
+[서드파티 라이선스 고지 / Third-Party License Notices]
+
+본 프로젝트는 다음 오픈소스 라이브러리를 사용합니다.
+
+■ Tesseract.js (v2.1 신규)
+  - 저작권: Tesseract.js contributors
+  - 라이선스: Apache License 2.0
+  - 출처: https://github.com/naptha/tesseract.js
+  - 용도: 브라우저 기반 이미지 OCR 처리
+
+■ Google Fonts (Noto CJK 계열)
+  - 라이선스: SIL Open Font License 1.1
+  - 출처: https://fonts.google.com
+
+본 프로젝트의 TranslateDu 고유 코드(app.js, parser.js, prompts.js, renderer.js,
+i18n.js, glossary.js, storage.js, handwriting.js, ocr.js, utils.js, styles.css)는
+위 CC BY-NC-ND 4.0 라이선스의 적용을 받습니다.
+각 서드파티 라이브러리는 해당 라이브러리의 원본 라이선스 조건을 따릅니다.

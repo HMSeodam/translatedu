@@ -130,6 +130,7 @@ body {
 header {
   text-align: center;
   margin-bottom: 2rem;
+  padding-top: 1.5rem;
   padding-bottom: 1.5rem;
   border-bottom: 2px solid var(--color-border);
 }
@@ -139,6 +140,23 @@ header h1 {
   font-weight: 700;
   color: var(--color-primary);
   margin-bottom: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.version-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  border: 1.5px solid var(--color-primary);
+  border-radius: 4px;
+  padding: 0.1rem 0.4rem;
+  letter-spacing: 0.05em;
+  opacity: 0.7;
+  vertical-align: middle;
+  line-height: 1.4;
 }
 
 header .subtitle {
@@ -918,6 +936,13 @@ footer {
   margin-bottom: 0 !important;
 }
 
+.input-tools-group {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
 .ocr-upload-group {
   display: flex;
   align-items: center;
@@ -1118,6 +1143,30 @@ footer {
 
 .btn-handwriting:hover {
   background: #d97706;
+  color: #fff;
+  box-shadow: var(--shadow-sm);
+}
+
+/* ───────── OCR 버튼 ───────── */
+
+.btn-ocr {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #3b82f6;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+  white-space: nowrap;
+}
+
+.btn-ocr:hover {
+  background: #3b82f6;
   color: #fff;
   box-shadow: var(--shadow-sm);
 }
@@ -1336,4 +1385,284 @@ footer {
   .hw-canvas-wrap {
     align-items: stretch;
   }
+}
+
+/* ───────── OCR 패널 ───────── */
+
+.ocr-panel {
+  margin-bottom: 0.75rem;
+  border: 1px solid #3b82f6;
+  border-radius: var(--radius);
+  background: #f0f7ff;
+  overflow: hidden;
+}
+
+.ocr-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 1rem;
+  background: #dbeafe;
+  border-bottom: 1px solid #3b82f6;
+}
+
+.ocr-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #1d4ed8;
+}
+
+.ocr-hint {
+  font-size: 0.78rem;
+  color: #3b82f6;
+  flex: 1;
+}
+
+.ocr-body {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* 언어 선택 */
+.ocr-lang-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.ocr-lang-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #1d4ed8;
+  white-space: nowrap;
+}
+
+.ocr-lang-select {
+  font-size: 0.82rem;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid #93c5fd;
+  border-radius: var(--radius);
+  background: #fff;
+  color: #1e3a8a;
+  cursor: pointer;
+  flex: 1;
+  min-width: 180px;
+}
+
+/* 업로드 영역 */
+.ocr-upload-area {
+  position: relative;
+  border: 2px dashed #93c5fd;
+  border-radius: var(--radius);
+  background: #fff;
+  padding: 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+  text-align: center;
+}
+
+.ocr-upload-area:hover,
+.ocr-upload-area.dragover {
+  background: #eff6ff;
+  border-color: #3b82f6;
+}
+
+.ocr-upload-icon {
+  font-size: 2rem;
+  opacity: 0.5;
+  line-height: 1;
+}
+
+.ocr-upload-text {
+  font-size: 0.85rem;
+  color: #3b82f6;
+  font-weight: 500;
+}
+
+.ocr-upload-hint {
+  font-size: 0.72rem;
+  color: #93c5fd;
+  letter-spacing: 0.05em;
+}
+
+/* 미리보기 */
+.ocr-preview-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.ocr-preview-img {
+  width: 100%;
+  max-height: 220px;
+  object-fit: contain;
+  border: 1px solid #bfdbfe;
+  border-radius: var(--radius);
+  background: #fff;
+}
+
+.ocr-reset-btn {
+  align-self: flex-end;
+  background: none;
+  border: none;
+  font-size: 0.75rem;
+  color: #6b7280;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 0.2rem 0.4rem;
+}
+
+.ocr-reset-btn:hover { color: #ef4444; }
+
+/* 진행 상태 */
+.ocr-status-area {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.ocr-status-text {
+  font-size: 0.78rem;
+  color: #3b82f6;
+}
+
+.ocr-progress-outer {
+  height: 4px;
+  background: #bfdbfe;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.ocr-progress-inner {
+  height: 100%;
+  background: #2563eb;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+  width: 0%;
+}
+
+/* 실행 버튼 */
+.ocr-run-btn {
+  padding: 0.65rem 1rem;
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  letter-spacing: 0.02em;
+}
+
+.ocr-run-btn:hover:not(:disabled) { background: #1d4ed8; }
+.ocr-run-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* 결과 */
+.ocr-result-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ocr-result-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.ocr-result-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #1d4ed8;
+}
+
+.ocr-result-meta {
+  font-size: 0.72rem;
+  color: #6b7280;
+}
+
+.ocr-result-text {
+  width: 100%;
+  font-size: 0.9rem;
+  line-height: 1.8;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #bfdbfe;
+  border-radius: var(--radius);
+  background: #fff;
+  font-family: 'Noto Serif KR', 'Noto Serif SC', 'Noto Serif TC', serif;
+  resize: vertical;
+  color: #1e293b;
+}
+
+.ocr-result-text:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.ocr-result-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.ocr-btn-primary {
+  padding: 0.5rem 1rem;
+  background: #1d4ed8;
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex: 1;
+}
+
+.ocr-btn-primary:hover { background: #1e40af; }
+
+.ocr-btn-secondary {
+  padding: 0.5rem 1rem;
+  background: #fff;
+  color: #1d4ed8;
+  border: 1px solid #93c5fd;
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.ocr-btn-secondary:hover {
+  background: #eff6ff;
+  border-color: #3b82f6;
+}
+
+/* 반응형 */
+@media (max-width: 640px) {
+  .ocr-hint { display: none; }
+  .ocr-result-actions { flex-direction: column; }
+  .ocr-btn-primary, .ocr-btn-secondary { flex: unset; width: 100%; }
+}
+
+/* OCR 고사본 경고 */
+.ocr-warn {
+  font-size: 0.76rem;
+  color: #92400e;
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+  border-radius: var(--radius);
+  padding: 0.5rem 0.75rem;
+  line-height: 1.6;
 }

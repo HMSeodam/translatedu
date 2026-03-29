@@ -53,6 +53,9 @@ function initializeApp() {
   // 이벤트 바인딩
   bindEvents();
 
+  // OCR 모듈 초기화
+  OCRModule.init();
+
   // 결과 영역 숨김
   clearResults();
 
@@ -96,6 +99,8 @@ function bindEvents() {
       document.body.setAttribute('data-lang', langSelect.value);
       const HTML_LANG_MAP = { ko: 'ko', en: 'en', ja: 'ja', 'zh-CN': 'zh-Hans', 'zh-TW': 'zh-Hant' };
       document.documentElement.lang = HTML_LANG_MAP[langSelect.value] || 'ko';
+      // OCR 언어 옵션 텍스트도 갱신
+      if (typeof OCRModule !== 'undefined') OCRModule.updateLangOptions(langSelect.value);
     });
   }
 
@@ -130,6 +135,17 @@ function bindEvents() {
   const clearBtn = document.getElementById('clear-btn');
   if (clearBtn) {
     clearBtn.addEventListener('click', handleClear);
+  }
+
+  // ───────── OCR 관련 이벤트 ─────────
+  const ocrBtn = document.getElementById('ocr-btn');
+  if (ocrBtn) {
+    ocrBtn.addEventListener('click', () => {
+      OCRModule.toggle();
+      // OCR 열릴 때 필기 패널 닫기
+      const hwPanel = document.getElementById('handwriting-panel');
+      if (hwPanel) hwPanel.style.display = 'none';
+    });
   }
 
   // ───────── 필기 입력 관련 이벤트 ─────────
@@ -293,6 +309,9 @@ function handleClear() {
     handwritingRecognizer.clearCanvas();
     handwritingRecognizer.clearSelected();
   }
+
+  // OCR 패널 닫기
+  OCRModule.close();
 
   debugLog('초기화 완료');
 }
