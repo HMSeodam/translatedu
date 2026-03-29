@@ -665,8 +665,11 @@ function downloadAnalysisJson(data) {
   a.href = url;
   const timestamp = new Date().toISOString().slice(0, 16).replace(/[T:]/g, '-');
   a.download = `TranslateDu_${timestamp}.json`;
+  a.style.display = 'none';
+  document.body.appendChild(a);
   a.click();
-  URL.revokeObjectURL(url);
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 /**
@@ -986,8 +989,11 @@ footer{text-align:center;padding:1.5rem 0;font-size:0.75rem;color:var(--color-te
   a.href = url;
   const ts = new Date().toISOString().slice(0, 16).replace(/[T:]/g, '-');
   a.download = `TranslateDu_${ts}.html`;
+  a.style.display = 'none';
+  document.body.appendChild(a);
   a.click();
-  URL.revokeObjectURL(url);
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 /**
