@@ -728,19 +728,19 @@ function downloadAnalysisHtml(data) {
   ).join(' ');
 
   // ── 토큰 박스 ──
-  const tokensHtml = (seg.tokens || []).map(t => {
-    const isBuddh = t.is_buddhist_term;
+  const tokensHtml = (seg.tokens || []).map(tok => {
+    const isBuddh = tok.is_buddhist_term;
     const cls = isBuddh ? 'token-box buddhist-term' : 'token-box';
-    const surfaceDisplay = escapeHtml(sanitizeSurface(fixBrokenUnicode(t.surface)));
-    const gloss = fixBrokenUnicode((t.char_gloss || []).join(', '));
-    const posTags = (t.pos_candidates || []).map(p => `<span class="pos-tag">${escapeHtml(fixBrokenUnicode(String(p||'')))}</span>`).join(' ');
-    const funcTags = (t.function_candidates || []).map(f => `<span class="func-tag">${escapeHtml(fixBrokenUnicode(String(f||'')))}</span>`).join(' ');
-    const conf = t.confidence || 'unknown';
+    const surfaceDisplay = escapeHtml(sanitizeSurface(fixBrokenUnicode(tok.surface)));
+    const gloss = fixBrokenUnicode((tok.char_gloss || []).join(', '));
+    const posTags = (tok.pos_candidates || []).map(p => `<span class="pos-tag">${escapeHtml(fixBrokenUnicode(String(p||'')))}</span>`).join(' ');
+    const funcTags = (tok.function_candidates || []).map(f => `<span class="func-tag">${escapeHtml(fixBrokenUnicode(String(f||'')))}</span>`).join(' ');
+    const conf = tok.confidence || 'unknown';
     const confCls = ({ high: 'conf-high', medium: 'conf-medium', low: 'conf-low' })[conf] || 'conf-unknown';
     const confLbl = confidenceLabel(conf);
     const buddhMark = isBuddh ? '<span class="buddhist-mark">佛</span>' : '';
-    const ambiguity = (t.ambiguity || []).length > 0
-      ? `<div class="token-ambiguity">⚠ ${escapeHtml(fixBrokenUnicode(t.ambiguity.map(a => typeof a === 'object' && a ? Object.values(a).filter(Boolean).join(': ') : String(a||'')).join('; ')))}</div>` : '';
+    const ambiguity = (tok.ambiguity || []).length > 0
+      ? `<div class="token-ambiguity">⚠ ${escapeHtml(fixBrokenUnicode(tok.ambiguity.map(a => typeof a === 'object' && a ? Object.values(a).filter(Boolean).join(': ') : String(a||'')).join('; ')))}</div>` : '';
 
     return `<div class="${cls}">
       ${buddhMark}
@@ -812,21 +812,21 @@ function downloadAnalysisHtml(data) {
 
   // ── 어휘 카드 ──
   const seen = new Set();
-  const vocabTokens = (seg.tokens || []).filter(t => {
-    if (seen.has(t.surface)) return false;
-    seen.add(t.surface);
-    return t.is_buddhist_term || (t.char_gloss && t.char_gloss.length > 0);
+  const vocabTokens = (seg.tokens || []).filter(tok => {
+    if (seen.has(tok.surface)) return false;
+    seen.add(tok.surface);
+    return tok.is_buddhist_term || (tok.char_gloss && tok.char_gloss.length > 0);
   });
-  const vocabHtml = vocabTokens.map(t => {
-    const isBuddh = t.is_buddhist_term;
+  const vocabHtml = vocabTokens.map(tok => {
+    const isBuddh = tok.is_buddhist_term;
     const cls = isBuddh ? 'vocab-card vocab-buddhist' : 'vocab-card';
-    const surfaceDisplay = escapeHtml(sanitizeSurface(fixBrokenUnicode(t.surface)));
-    const reading = t.reading ? `<div class="vocab-reading">${escapeHtml(t.reading)}</div>` : '';
-    const gloss = (t.char_gloss || []).length > 0
-      ? `<div class="vocab-gloss">${escapeHtml(t.char_gloss.join(', '))}</div>` : '';
-    const bm = t.buddhist_meaning
-      ? `<div class="vocab-buddhist-meaning">${escapeHtml(t.buddhist_meaning)}</div>` : '';
-    const posTags = (t.pos_candidates || []).map(p => `<span class="pos-tag">${escapeHtml(p)}</span>`).join(' ');
+    const surfaceDisplay = escapeHtml(sanitizeSurface(fixBrokenUnicode(tok.surface)));
+    const reading = tok.reading ? `<div class="vocab-reading">${escapeHtml(tok.reading)}</div>` : '';
+    const gloss = (tok.char_gloss || []).length > 0
+      ? `<div class="vocab-gloss">${escapeHtml(tok.char_gloss.join(', '))}</div>` : '';
+    const bm = tok.buddhist_meaning
+      ? `<div class="vocab-buddhist-meaning">${escapeHtml(tok.buddhist_meaning)}</div>` : '';
+    const posTags = (tok.pos_candidates || []).map(p => `<span class="pos-tag">${escapeHtml(p)}</span>`).join(' ');
     const badge = isBuddh ? `<div class="vocab-badge">${t('r_buddhist_term')}</div>` : '';
     return `<div class="${cls}">
       <div class="vocab-char">${surfaceDisplay}</div>
