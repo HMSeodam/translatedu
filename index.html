@@ -34,36 +34,20 @@
   <section class="input-section">
     <div class="input-label-row">
       <label for="input-text" data-i18n="input_label">한문 원문 입력</label>
-      <div class="ocr-upload-group">
-        <input type="file" id="ocr-file-input" accept="image/*" style="display:none">
-        <button id="ocr-upload-btn" class="btn-ocr" type="button" data-i18n="btn_ocr" data-i18n-title="btn_ocr_title" title="이미지에서 한자 인식 (OCR)">
-           이미지 OCR
-        </button>
-
+      <div class="input-tools-group">
         <button id="handwriting-btn" class="btn-handwriting" type="button" data-i18n="btn_handwriting" data-i18n-title="btn_handwriting_title" title="한자 필기 입력">
            필기 입력
         </button>
       </div>
     </div>
 
-    <!-- OCR 미리보기 / 상태 영역 -->
-    <div id="ocr-preview-area" class="ocr-preview-area" style="display:none;">
-      <div class="ocr-preview-header">
-        <span id="ocr-filename" class="ocr-filename"></span>
-        <span id="ocr-status" class="ocr-status"></span>
-        <button id="ocr-clear-btn" class="btn-ocr-clear" type="button" data-i18n-title="ocr_preview_close_title" title="미리보기 닫기">✕</button>
-      </div>
-      <div class="ocr-preview-content">
-        <img id="ocr-preview-img" class="ocr-preview-img" alt="OCR">
-      </div>
-    </div>
 
     <!-- ───────── 한자 필기 입력 패널 ───────── -->
     <div id="handwriting-panel" class="handwriting-panel" style="display:none;">
       <div class="hw-header">
         <span class="hw-title" data-i18n="hw_title"> 한자 필기 입력</span>
         <span class="hw-hint" data-i18n="hw_hint">아래 캔버스에 한자를 쓰세요</span>
-        <button id="hw-close-btn" class="btn-ocr-clear" type="button" title="✕">✕</button>
+        <button id="hw-close-btn" class="btn-close" type="button" title="✕">✕</button>
       </div>
       <div class="hw-body">
         <div class="hw-canvas-wrap">
@@ -170,9 +154,6 @@
 
 </div>
 
-<!-- ───────── ONNX Runtime Web (OCR용) ───────── -->
-<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.17.0/dist/ort.min.js"></script>
-
 <!-- ───────── 스크립트 로드 (의존성 순서 준수) ───────── -->
 <script src="utils.js"></script>
 <script src="glossary.js"></script>
@@ -181,7 +162,6 @@
 <script src="storage.js"></script>
 <script src="parser.js"></script>
 <script src="renderer.js"></script>
-<script src="ocr.js"></script>
 <script src="handwriting.js"></script>
 <script src="app.js"></script>
 

@@ -24,23 +24,3 @@ This work is licensed under the Creative Commons Attribution-NonCommercial-NoDer
 
 전문 보기 / Full license text:
 https://creativecommons.org/licenses/by-nc-nd/4.0/legalcode
-
----
-
-이 저장소에는 다음 제3자 오픈소스 소프트웨어가 포함되어 있습니다.
-This repository includes the following third-party open-source software.
-
-ONNX Runtime Web (ort.min.js, ort-wasm-*.wasm)
-  Copyright (c) Microsoft Corporation
-  MIT License — https://github.com/microsoft/onnxruntime/blob/main/LICENSE
-
----
-
-이 저장소에는 다음 제3자 모델을 직접 포함하지 않으나, 사용 시 외부에서 로딩됩니다.
-This repository does not bundle the following third-party model files,
-but they are loaded from an external source at runtime.
-
-NDL古典籍OCR-Lite (RTMDet, PARSeq, NDLmoji)
-  Copyright (c) 国立国会図書館 (National Diet Library, Japan)
-  CC BY 4.0 — https://creativecommons.org/licenses/by/4.0/
-  Source: https://github.com/ndl-lab/ndlkotenocr-lite

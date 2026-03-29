@@ -1034,7 +1034,7 @@ footer {
   color: var(--color-error);
 }
 
-.btn-ocr-clear {
+.btn-close {
   padding: 0.15rem 0.4rem;
   font-size: 0.85rem;
   background: transparent;
@@ -1045,7 +1045,7 @@ footer {
   line-height: 1;
 }
 
-.btn-ocr-clear:hover {
+.btn-close:hover {
   background: rgba(128, 90, 213, 0.15);
   color: var(--color-buddhist);
 }
