@@ -24,10 +24,8 @@ const MAX_RETRY = 3;       // JSON 파싱 실패 시 재시도 횟수
 const RETRY_DELAY_MS = 1000;
 const QUOTA_RETRY_DELAYS = [5000, 10000, 20000]; // 429 에러 시 백오프 딜레이 (5초, 10초, 20초)
 
-/** Promise 기반 딜레이 유틸리티 */
-function delay(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
+/** Promise 기반 딜레이 유틸리티 — utils.js의 delay()를 사용 */
+// (delay 함수는 utils.js에 정의됨)
 
 /**
  * 현재 선택된 모델 ID를 반환.
@@ -140,11 +138,23 @@ function matchGlossary(text, glossary) {
  * @param {Array} matches - matchGlossary() 반환값
  * @returns {string}
  */
-function buildGlossaryHints(matches) {
-  if (!matches || matches.length === 0) return '(해당 없음)';
+function buildGlossaryHints(matches, lang) {
+  lang = lang || 'ko';
+  if (!matches || matches.length === 0) {
+    const NONE = { ko: '(해당 없음)', en: '(none)', ja: '（該当なし）', 'zh-CN': '（无）', 'zh-TW': '（無）' };
+    return NONE[lang] || NONE.ko;
+  }
+  const BUDDHIST_LABEL = {
+    ko: '불교학적',
+    en: 'Buddhist doctrinal meaning',
+    ja: '仏教教学的意味',
+    'zh-CN': '佛教教学含义',
+    'zh-TW': '佛教教學含義',
+  };
+  const label = BUDDHIST_LABEL[lang] || BUDDHIST_LABEL.ko;
   return matches.map(m =>
-    `- ${m.surface}(${m.reading}): ${m.meaning}` +
-    (m.buddhist_meaning ? ` / 불교학적: ${m.buddhist_meaning}` : '') +
+    `- ${m.surface}(${getReading(m, lang)}): ${m.meaning}` +
+    (m.buddhist_meaning ? ` / ${label}: ${m.buddhist_meaning}` : '') +
     ` [${m.pos}]`
   ).join('\n');
 }
@@ -156,15 +166,20 @@ function buildGlossaryHints(matches) {
  * USER_PROMPT_TEMPLATE에 실제 값을 채워 프롬프트 생성.
  * @param {string} inputText - 전처리된 원문
  * @param {string} glossaryHints - buildGlossaryHints() 반환값
+ * @param {string} lang - 출력 언어 ('ko' | 'en' | 'ja')
  * @returns {string}
  */
-function buildUserPrompt(inputText, glossaryHints) {
-  let prompt = USER_PROMPT_TEMPLATE
-    .replace('{{INPUT_TEXT}}', inputText)
-    .replace('{{GLOSSARY_HINTS}}', glossaryHints);
+function buildUserPrompt(inputText, glossaryHints, lang) {
+  lang = lang || 'ko';
+  const config = OUTPUT_LANG_CONFIG[lang] || OUTPUT_LANG_CONFIG.ko;
 
-  // few-shot 예시 첨부
-  prompt += buildFewShotString();
+  // 언어별 전용 프롬프트 빌더 사용
+  const builder = USER_PROMPT_TEMPLATES[lang] || USER_PROMPT_TEMPLATES.ko;
+  let prompt = builder(inputText, glossaryHints, config.outputCondition, config.schemaTranslationFields);
+
+  // 언어별 완전 번역 few-shot 첨부 (모든 언어 동일 품질)
+  prompt += buildFewShotString(lang);
+
   return prompt;
 }
 
@@ -352,18 +367,31 @@ function validateAnalysisJson(data) {
  * @returns {Promise<object>} 분석 JSON
  * @throws {Error}
  */
-async function firstPassAnalysis(inputText, glossaryHints, apiKey, onStatus) {
-  const userPrompt = buildUserPrompt(inputText, glossaryHints);
+async function firstPassAnalysis(inputText, glossaryHints, apiKey, onStatus, lang) {
+  const userPrompt = buildUserPrompt(inputText, glossaryHints, lang);
 
   for (let attempt = 0; attempt <= MAX_RETRY; attempt++) {
     try {
-      let systemMsg = SYSTEM_PROMPT;
+      let systemMsg = buildSystemPrompt(lang || 'ko');
       if (attempt > 0) {
-        // 재시도 시 더 강한 JSON 지시 + few-shot 제거로 토큰 절약
-        systemMsg += '\n\n중요: 반드시 유효한 JSON만 출력하라. 설명문, 코드 펜스, 기타 텍스트를 절대 포함하지 마라. JSON 객체 하나만 출력하라. 응답이 잘리지 않도록 각 필드를 간결하게 작성하라.';
-        if (typeof onStatus === 'function') {
-          onStatus(`JSON 파싱 실패. 재시도 중... (${attempt}/${MAX_RETRY})`, 'warning');
-        }
+      const RETRY_SUFFIX = {
+        ko: '\n\n중요: 반드시 유효한 JSON만 출력하라. 설명문, 코드 펜스, 기타 텍스트를 절대 포함하지 마라. JSON 객체 하나만 출력하라. 응답이 잘리지 않도록 각 필드를 간결하게 작성하라.',
+        en: '\n\nIMPORTANT: Output only valid JSON. Never include explanations, code fences, or other text. Output exactly one JSON object. Keep each field concise to avoid truncation.',
+        ja: '\n\n重要: 必ず有効なJSONのみを出力すること。説明文、コードフェンス、その他のテキストを絶対に含めないこと。JSONオブジェクト一つのみを出力すること。切り捨てを避けるため各フィールドを簡潔に記述すること。',
+        'zh-CN': '\n\n重要：必须只输出有效的JSON。绝对不要包含说明文字、代码围栏或其他文本。只输出一个JSON对象。为避免截断，请简洁填写各字段。',
+        'zh-TW': '\n\n重要：必須只輸出有效的JSON。絕對不要包含說明文字、程式碼圍欄或其他文字。只輸出一個JSON物件。為避免截斷，請簡潔填寫各欄位。',
+      };
+      const RETRY_STATUS = {
+        ko: `JSON 파싱 실패. 재시도 중... (${attempt}/${MAX_RETRY})`,
+        en: `JSON parse failed. Retrying... (${attempt}/${MAX_RETRY})`,
+        ja: `JSON解析失敗。再試行中... (${attempt}/${MAX_RETRY})`,
+        'zh-CN': `JSON解析失败。重试中... (${attempt}/${MAX_RETRY})`,
+        'zh-TW': `JSON解析失敗。重試中... (${attempt}/${MAX_RETRY})`,
+      };
+      systemMsg += (RETRY_SUFFIX[lang] || RETRY_SUFFIX.ko);
+      if (typeof onStatus === 'function') {
+        onStatus(RETRY_STATUS[lang] || RETRY_STATUS.ko, 'warning');
+      }
         debugLog(`1차 분석 재시도 ${attempt}/${MAX_RETRY}`);
       }
 
@@ -408,16 +436,36 @@ async function firstPassAnalysis(inputText, glossaryHints, apiKey, onStatus) {
  * @returns {Promise<object>} 검증/수정된 JSON
  * @throws {Error}
  */
-async function verifyAnalysis(inputText, firstPassJson, apiKey, onStatus) {
-  const verificationPrompt = VERIFICATION_PROMPT_TEMPLATE
-    .replace('{{INPUT_TEXT}}', inputText)
-    .replace('{{FIRST_PASS_JSON}}', JSON.stringify(firstPassJson, null, 2));
+async function verifyAnalysis(inputText, firstPassJson, apiKey, onStatus, lang) {
+  lang = lang || 'ko';
+
+  // 언어별 검증기 시스템 메시지
+  const VERIFY_SYSTEM_BASE = {
+    ko: '너는 한문 불교 문장 분석 JSON을 정밀 검증하는 전문 검증기다. 원문 완전성·성분 정합성·불교 용어 정확성·번역 품질·surface 오염 여부를 모두 점검하고 수정하라. 반드시 JSON만 출력하라.',
+    en: 'You are a precision verifier for classical Chinese Buddhist text analysis JSON. Check source completeness, component consistency, Buddhist term accuracy, translation quality, and surface field contamination. Output JSON only. All output text must be in English.',
+    ja: 'あなたは漢文仏教文献の分析JSONを精密検証する専門検証器です。原文の完全性・成分整合性・仏教用語の正確性・書き下し文の訓読形式・surfaceフィールドの汚染を全て点検し修正してください。書き下し文が現代語訳になっていたら必ず訓読体に修正すること。JSONのみを出力してください。',
+    'zh-CN': '你是汉文佛教文献分析JSON的精密验证器。检查原文完整性、成分一致性、佛教术语准确性、翻译质量及surface字段污染情况，全部检查并修正。只输出JSON。所有输出文字须使用简体中文。',
+    'zh-TW': '你是漢文佛教文獻分析JSON的精密驗證器。檢查原文完整性、成分一致性、佛教術語準確性、翻譯品質及surface欄位污染情況，全部檢查並修正。只輸出JSON。所有輸出文字須使用繁體中文。',
+  };
+  const VERIFY_RETRY_SUFFIX = {
+    ko: '\n\nJSON 이외의 텍스트를 절대 출력하지 마라.',
+    en: '\n\nOutput absolutely no text other than JSON.',
+    ja: '\n\nJSON以外のテキストは絶対に出力しないでください。',
+    'zh-CN': '\n\n绝对不要输出JSON以外的任何文本。',
+    'zh-TW': '\n\n絕對不要輸出JSON以外的任何文字。',
+  };
+
+  const verificationPrompt = buildVerificationPrompt(inputText, firstPassJson, lang);
+
+  // 언어별 추가 지시 삽입 (검증 단계에서도 출력 언어 강제)
+  const langConfig = OUTPUT_LANG_CONFIG[lang] || OUTPUT_LANG_CONFIG.ko;
+  const langSuffix = langConfig.systemSuffix || '';
 
   for (let attempt = 0; attempt <= MAX_RETRY; attempt++) {
     try {
-      let systemMsg = '너는 한문 불교 문헌 분석 결과를 검증하는 전문 검증기다. 반드시 JSON만 출력하라.';
+      let systemMsg = (VERIFY_SYSTEM_BASE[lang] || VERIFY_SYSTEM_BASE.ko) + langSuffix;
       if (attempt > 0) {
-        systemMsg += '\n\n절대로 JSON 이외의 텍스트를 출력하지 마라.';
+        systemMsg += (VERIFY_RETRY_SUFFIX[lang] || VERIFY_RETRY_SUFFIX.ko);
         debugLog(`검증 재시도 ${attempt}/${MAX_RETRY}`);
       }
 
@@ -425,7 +473,7 @@ async function verifyAnalysis(inputText, firstPassJson, apiKey, onStatus) {
       const parsed = extractJsonFromResponse(rawText);
 
       if (!parsed) {
-        throw new Error('검증 JSON 파싱 실패');
+        throw new Error('Verification JSON parse failed');
       }
 
       debugLog('검증 완료');
@@ -433,7 +481,6 @@ async function verifyAnalysis(inputText, firstPassJson, apiKey, onStatus) {
 
     } catch (e) {
       debugLog(`검증 시도 ${attempt + 1} 실패:`, e.message);
-      // 429/403 등 API 레벨 에러는 재시도하지 않고 즉시 전파
       if (e.message.includes('(429)') || e.message.includes('(403)') || e.message.includes('(400)')) {
         debugLog('검증 실패 (API 오류) — 1차 분석 결과를 그대로 사용합니다.');
         return firstPassJson;
@@ -442,7 +489,6 @@ async function verifyAnalysis(inputText, firstPassJson, apiKey, onStatus) {
         await delay(RETRY_DELAY_MS);
         continue;
       }
-      // 검증 실패 시 1차 결과를 그대로 반환 (검증은 선택적 개선 단계)
       debugLog('검증 실패 — 1차 분석 결과를 그대로 사용합니다.');
       return firstPassJson;
     }
@@ -464,6 +510,47 @@ async function verifyAnalysis(inputText, firstPassJson, apiKey, onStatus) {
  */
 function runLocalFallbackAnalysis(inputText, glossaryMatches) {
   debugLog('로컬 폴백 분석 실행');
+
+  const lang = (typeof getSelectedOutputLang === 'function') ? getSelectedOutputLang() : 'ko';
+
+  const FALLBACK_MSG = {
+    ambiguity: {
+      ko: '로컬 폴백 분석: 문장성분 자동 판정 불가',
+      en: 'Local fallback: automatic component analysis unavailable',
+      ja: 'ローカルフォールバック：文の成分の自動判定不可',
+      'zh-CN': '本地回退分析：无法自动判断句子成分',
+      'zh-TW': '本地回退分析：無法自動判斷句子成分',
+    },
+    litPrefix: {
+      ko: '[로컬 축자역 보조]',
+      en: '[Local word-by-word gloss]',
+      ja: '[ローカル逐語訳補助]',
+      'zh-CN': '[本地逐字译辅助]',
+      'zh-TW': '[本地逐字譯輔助]',
+    },
+    idioNeeded: {
+      ko: '(API 분석 필요)',
+      en: '(API analysis required)',
+      ja: '（API分析が必要）',
+      'zh-CN': '（需要API分析）',
+      'zh-TW': '（需要API分析）',
+    },
+    grammarFallback: {
+      ko: '로컬 폴백: 문법 포인트 자동 추출 불가',
+      en: 'Local fallback: grammar points cannot be extracted automatically',
+      ja: 'ローカルフォールバック：文法ポイントの自動抽出不可',
+      'zh-CN': '本地回退：无法自动提取语法要点',
+      'zh-TW': '本地回退：無法自動提取語法要點',
+    },
+    issueNote: {
+      ko: '로컬 폴백 분석 결과입니다. Gemini API를 사용하면 더 정확한 분석을 받을 수 있습니다.',
+      en: 'This is a local fallback analysis. Use Gemini API for more accurate results.',
+      ja: 'これはローカルフォールバック分析の結果です。Gemini APIを使用するとより正確な分析が得られます。',
+      'zh-CN': '这是本地回退分析结果。使用Gemini API可获得更准确的分析。',
+      'zh-TW': '這是本地回退分析結果。使用Gemini API可獲得更準確的分析。',
+    },
+  };
+  const fb = (key) => FALLBACK_MSG[key][lang] || FALLBACK_MSG[key].ko;
 
   const clauses = splitClauses(inputText);
 
@@ -502,7 +589,7 @@ function runLocalFallbackAnalysis(inputText, glossaryMatches) {
       ambiguity: [],
       _position: match.position, // 정렬용 임시 필드
       // 폴백 전용 추가 정보
-      reading: match.reading,
+      reading: getReading(match, lang),
       buddhist_meaning: match.buddhist_meaning || null
     });
   }
@@ -572,18 +659,18 @@ function runLocalFallbackAnalysis(inputText, glossaryMatches) {
         object: [],
         complement: [],
         omitted_elements: [],
-        ambiguity: ['로컬 폴백 분석: 문장성분 자동 판정 불가']
+        ambiguity: [fb('ambiguity')]
       },
-      literal_translation: `[로컬 축자역 보조] ${glossStr}`,
-      idiomatic_translation: '(API 분석 필요)',
-      grammar_points: ['로컬 폴백: 문법 포인트 자동 추출 불가'],
+      literal_translation: `${fb('litPrefix')} ${glossStr}`,
+      idiomatic_translation: fb('idioNeeded'),
+      grammar_points: [fb('grammarFallback')],
       buddhist_notes: tokens
         .filter(t => t.is_buddhist_term)
         .map(t => `${t.surface}(${t.reading || ''}): ${t.buddhist_meaning || t.char_gloss[0]}`)
     },
     alignment: [],
     verification: {
-      issues_found: ['로컬 폴백 분석 결과입니다. Gemini API를 사용하면 더 정확한 분석을 받을 수 있습니다.'],
+      issues_found: [fb('issueNote')],
       revised_literal_translation: '',
       revised_idiomatic_translation: '',
       revised_components: {
@@ -596,7 +683,7 @@ function runLocalFallbackAnalysis(inputText, glossaryMatches) {
         omitted_elements: [],
         ambiguity: []
       },
-      final_notes: ['API 연결 실패로 로컬 사전 기반 분석만 제공됩니다.']
+      final_notes: [fb('issueNote')]
     }
   };
 }
@@ -626,57 +713,171 @@ async function analyzeText(inputText, apiKey, mode, onStatus) {
     if (typeof onStatus === 'function') onStatus(msg, type);
   };
 
+  // 출력 언어
+  const lang = getSelectedOutputLang();
+
   // 전처리
-  status('입력 텍스트 전처리 중...', 'info');
+  const statusMessages = {
+    preprocessing: {
+      ko: '입력 텍스트 전처리 중...',
+      en: 'Preprocessing input text...',
+      ja: '入力テキストを前処理中...',
+      'zh-CN': '正在预处理输入文本...',
+      'zh-TW': '正在前處理輸入文字...',
+    },
+    tagging: {
+      ko: '불교 용어 사전 태깅 중...',
+      en: 'Tagging Buddhist terminology...',
+      ja: '仏教用語辞典タグ付け中...',
+      'zh-CN': '正在标注佛教术语...',
+      'zh-TW': '正在標註佛教術語...',
+    },
+    localAnalyzing: {
+      ko: '로컬 사전 기반 분석 중...',
+      en: 'Analyzing with local dictionary...',
+      ja: 'ローカル辞書で分析中...',
+      'zh-CN': '正在使用本地词典分析...',
+      'zh-TW': '正在使用本地詞典分析...',
+    },
+    localDone: {
+      ko: '로컬 분석 완료',
+      en: 'Local analysis complete',
+      ja: 'ローカル分析完了',
+      'zh-CN': '本地分析完成',
+      'zh-TW': '本地分析完成',
+    },
+    noApiKey: {
+      ko: 'API Key가 없어 로컬 분석으로 전환합니다.',
+      en: 'No API Key. Switching to local analysis.',
+      ja: 'API Keyがないため、ローカル分析に切り替えます。',
+      'zh-CN': '无API Key，切换为本地分析。',
+      'zh-TW': '無API Key，切換為本地分析。',
+    },
+    step1: {
+      ko: '1단계: 분절(segmentation) 및 구문 분석(parsing) 중...',
+      en: 'Step 1: Segmentation and parsing...',
+      ja: '第1段階：分節（segmentation）と構文解析（parsing）中...',
+      'zh-CN': '第1阶段：分节（segmentation）和句法分析（parsing）中...',
+      'zh-TW': '第1階段：分節（segmentation）和句法分析（parsing）中...',
+    },
+    step3: {
+      ko: '3단계: 검증(verification) 중...',
+      en: 'Step 3: Verification...',
+      ja: '第3段階：検証（verification）中...',
+      'zh-CN': '第3阶段：验证（verification）中...',
+      'zh-TW': '第3階段：驗證（verification）中...',
+    },
+    done: {
+      ko: '분석 완료!',
+      en: 'Analysis complete!',
+      ja: '分析完了！',
+      'zh-CN': '分析完成！',
+      'zh-TW': '分析完成！',
+    },
+    apiFailed: {
+      ko: (msg) => `API 분석 실패: ${msg}. 로컬 분석으로 전환합니다.`,
+      en: (msg) => `API analysis failed: ${msg}. Switching to local analysis.`,
+      ja: (msg) => `API分析失敗: ${msg}。ローカル分析に切り替えます。`,
+      'zh-CN': (msg) => `API分析失败: ${msg}。切换为本地分析。`,
+      'zh-TW': (msg) => `API分析失敗: ${msg}。切換為本地分析。`,
+    },
+    noText: {
+      ko: '분석할 텍스트가 없습니다.',
+      en: 'No text to analyze.',
+      ja: '分析するテキストがありません。',
+      'zh-CN': '没有可分析的文本。',
+      'zh-TW': '沒有可分析的文字。',
+    },
+  };
+  const sm = (key, arg) => {
+    const entry = statusMessages[key]?.[lang] || statusMessages[key]?.['ko'] || key;
+    return typeof entry === 'function' ? entry(arg) : entry;
+  };
+
+  status(sm('preprocessing'), 'info');
   const normalized = normalizeInput(inputText);
   if (!normalized) {
-    throw new Error('분석할 텍스트가 없습니다.');
+    throw new Error(sm('noText'));
   }
 
   // 불교 용어 사전 태깅
-  status('불교 용어 사전 태깅 중...', 'info');
+  status(sm('tagging'), 'info');
   const glossaryMatches = matchGlossary(normalized, GLOSSARY);
   const buddhistMatches = matchGlossary(normalized, BUDDHIST_TERMS_ONLY);
-  const glossaryHints = buildGlossaryHints(buddhistMatches);
+  const glossaryHints = buildGlossaryHints(buddhistMatches, lang);
   debugLog('사전 태깅 결과:', glossaryMatches.length, '건');
 
   // 직접 입력 모드 → 로컬 폴백
   if (mode === 'manual') {
-    status('로컬 사전 기반 분석 중...', 'info');
+    status(sm('localAnalyzing'), 'info');
     const fallback = runLocalFallbackAnalysis(normalized, glossaryMatches);
-    status('로컬 분석 완료', 'success');
-    return fallback;
+    status(sm('localDone'), 'success');
+    return sanitizeResult(fallback);
   }
 
   // Gemini 모드
   if (!apiKey) {
-    status('API Key가 없어 로컬 분석으로 전환합니다.', 'warning');
+    status(sm('noApiKey'), 'warning');
     const fallback = runLocalFallbackAnalysis(normalized, glossaryMatches);
     return fallback;
   }
 
   try {
     // ── 1단계 + 2단계: Segmentation + Parsing ──
-    status('1단계: 분절(segmentation) 및 구문 분석(parsing) 중...', 'info');
-    const firstPass = await firstPassAnalysis(normalized, glossaryHints, apiKey, onStatus);
+    status(sm('step1'), 'info');
+    const firstPass = await firstPassAnalysis(normalized, glossaryHints, apiKey, onStatus, lang);
 
     // ── 3단계: Verification ──
-    status('3단계: 검증(verification) 중...', 'info');
-    const verified = await verifyAnalysis(normalized, firstPass, apiKey, onStatus);
+    status(sm('step3'), 'info');
+    const verified = await verifyAnalysis(normalized, firstPass, apiKey, onStatus, lang);
 
     // 검증 결과를 1차 결과에 병합
     const finalResult = mergeVerification(firstPass, verified);
     finalResult.input_text = normalized;
 
-    status('분석 완료!', 'success');
-    return finalResult;
+    status(sm('done'), 'success');
+    return sanitizeResult(finalResult);
 
   } catch (e) {
     debugLog('API 분석 실패, 로컬 폴백으로 전환:', e.message);
-    status(`API 분석 실패: ${e.message}. 로컬 분석으로 전환합니다.`, 'warning');
+    status(sm('apiFailed', e.message), 'warning');
     const fallback = runLocalFallbackAnalysis(normalized, glossaryMatches);
     return fallback;
   }
+}
+
+
+// ───────── 13. 결과 데이터 정제 ─────────
+
+/**
+ * API 응답 전체를 순회하여 모든 텍스트 필드에서
+ * 깨진 문자·오염 문자를 제거하고, source_span에서 비한자를 제거.
+ * 렌더러 레벨 방어에 더해 데이터 레벨에서도 이중 방어.
+ * @param {object} data
+ * @returns {object}
+ */
+function sanitizeResult(data) {
+  if (!data || typeof data !== 'object') return data;
+
+  // 재귀적으로 모든 문자열 필드 정제
+  function clean(val, fieldName) {
+    if (val === null || val === undefined) return val;
+    if (Array.isArray(val)) return val.map(v => clean(v, fieldName));
+    if (typeof val === 'object') {
+      const out = {};
+      for (const k of Object.keys(val)) out[k] = clean(val[k], k);
+      return out;
+    }
+    if (typeof val !== 'string') return val;
+    // source_span: 한자만 허용
+    if (fieldName === 'source_span') return sanitizeSurface(fixBrokenUnicode(val));
+    // surface: 한자만 허용
+    if (fieldName === 'surface') return sanitizeSurface(fixBrokenUnicode(val));
+    // 나머지 문자열: fixBrokenUnicode만 적용
+    return fixBrokenUnicode(val);
+  }
+
+  return clean(data, '');
 }
 
 

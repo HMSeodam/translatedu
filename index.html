@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Noto+Serif+KR:wght@400;700&family=Noto+Sans+JP:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;700&family=Noto+Sans+SC:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;700&family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Serif+TC:wght@400;700&display=swap" rel="stylesheet">
   <title>TranslateDu — 한문 불교 문헌 학습 도구</title>
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -10,49 +13,115 @@
 
 <div class="app-container">
 
+  <!-- ───────── 언어 선택 (우상단 고정) ───────── -->
+  <div class="global-lang-selector">
+    <select id="output-lang-select" class="global-lang-select">
+      <option value="ko">한국어</option>
+      <option value="en">English</option>
+      <option value="ja">日本語</option>
+      <option value="zh-CN">简体中文</option>
+      <option value="zh-TW">繁體中文</option>
+    </select>
+  </div>
+
   <!-- ───────── 헤더 ───────── -->
   <header>
     <h1>TranslateDu</h1>
-    <p class="subtitle">한문 불교 문헌 구조 분석 · 번역 학습 도구</p>
+    <p class="subtitle" data-i18n="subtitle">한문 불교 문헌 구조 분석 · 번역 학습 도구</p>
   </header>
 
   <!-- ───────── 입력 섹션 ───────── -->
   <section class="input-section">
-    <label for="input-text">한문 원문 입력</label>
-    <textarea id="input-text" placeholder="분석할 한문 불교 문헌을 입력하세요. 예: 若依一乘此中即具十佛體德用。准以思攝。"></textarea>
+    <div class="input-label-row">
+      <label for="input-text" data-i18n="input_label">한문 원문 입력</label>
+      <div class="ocr-upload-group">
+        <input type="file" id="ocr-file-input" accept="image/*" style="display:none">
+        <button id="ocr-upload-btn" class="btn-ocr" type="button" data-i18n="btn_ocr" data-i18n-title="btn_ocr_title" title="이미지에서 한자 인식 (OCR)">
+           이미지 OCR
+        </button>
+
+        <button id="handwriting-btn" class="btn-handwriting" type="button" data-i18n="btn_handwriting" data-i18n-title="btn_handwriting_title" title="한자 필기 입력">
+           필기 입력
+        </button>
+      </div>
+    </div>
+
+    <!-- OCR 미리보기 / 상태 영역 -->
+    <div id="ocr-preview-area" class="ocr-preview-area" style="display:none;">
+      <div class="ocr-preview-header">
+        <span id="ocr-filename" class="ocr-filename"></span>
+        <span id="ocr-status" class="ocr-status"></span>
+        <button id="ocr-clear-btn" class="btn-ocr-clear" type="button" data-i18n-title="ocr_preview_close_title" title="미리보기 닫기">✕</button>
+      </div>
+      <div class="ocr-preview-content">
+        <img id="ocr-preview-img" class="ocr-preview-img" alt="OCR">
+      </div>
+    </div>
+
+    <!-- ───────── 한자 필기 입력 패널 ───────── -->
+    <div id="handwriting-panel" class="handwriting-panel" style="display:none;">
+      <div class="hw-header">
+        <span class="hw-title" data-i18n="hw_title"> 한자 필기 입력</span>
+        <span class="hw-hint" data-i18n="hw_hint">아래 캔버스에 한자를 쓰세요</span>
+        <button id="hw-close-btn" class="btn-ocr-clear" type="button" title="✕">✕</button>
+      </div>
+      <div class="hw-body">
+        <div class="hw-canvas-wrap">
+          <canvas id="hw-canvas" width="280" height="280"></canvas>
+          <div class="hw-canvas-actions">
+            <button id="hw-clear-canvas" class="hw-btn" type="button" data-i18n="hw_clear">지우기</button>
+            <button id="hw-undo-stroke" class="hw-btn" type="button" data-i18n="hw_undo">획 취소</button>
+          </div>
+        </div>
+        <div class="hw-candidates-area">
+          <div class="hw-candidates-label" data-i18n="hw_candidates_label">인식 후보</div>
+          <div id="hw-candidates" class="hw-candidates"></div>
+          <div class="hw-selected-area">
+            <div class="hw-selected-label" data-i18n="hw_selected_label">입력 대기열</div>
+            <div id="hw-selected" class="hw-selected"></div>
+            <div class="hw-selected-actions">
+              <button id="hw-insert-btn" class="hw-btn hw-btn-primary" type="button" data-i18n="hw_insert">입력란에 추가</button>
+              <button id="hw-clear-selected" class="hw-btn" type="button" data-i18n="hw_clear_selected">대기열 비우기</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <textarea id="input-text" data-i18n-placeholder="input_placeholder" placeholder="분석할 한문 불교 문헌을 입력하세요."></textarea>
 
     <!-- 번역 방식 선택 탭 -->
     <div class="tab-group">
-      <button class="tab-btn active" data-mode="gemini">Gemini API 분석</button>
-      <button class="tab-btn" data-mode="manual">로컬 사전 분석</button>
+      <button class="tab-btn active" data-mode="gemini" data-i18n="tab_gemini">Gemini API 분석</button>
+      <button class="tab-btn" data-mode="manual" data-i18n="tab_manual">로컬 사전 분석</button>
     </div>
 
     <!-- Gemini 설정 -->
     <div id="gemini-settings">
-      <label for="api-key-input">Gemini API Key</label>
+      <label for="api-key-input" data-i18n="label_api_key">Gemini API Key</label>
       <div class="api-key-group">
-        <input type="password" id="api-key-input" placeholder="Google AI Studio에서 발급받은 API Key를 입력하세요">
-        <button id="toggle-key-btn" type="button">표시</button>
+        <input type="password" id="api-key-input" data-i18n-placeholder="api_key_placeholder" placeholder="Google AI Studio에서 발급받은 API Key를 입력하세요">
+        <button id="toggle-key-btn" type="button" data-i18n="btn_show_key">표시</button>
       </div>
-      <label for="model-select">모델 선택</label>
+      <label for="model-select" data-i18n="label_model">모델 선택</label>
       <select id="model-select" class="model-select">
-        <option value="gemini-2.5-flash">Gemini 2.5 Flash (기본, 무료)</option>
-        <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash Lite (무료, 빠름)</option>
-        <option value="gemini-2.5-pro">Gemini 2.5 Pro (무료, 고품질)</option>
-        <option value="gemini-2.0-flash">Gemini 2.0 Flash (6월 퇴역 예정)</option>
+        <option value="gemini-2.5-flash" data-i18n="model_flash">Gemini 2.5 Flash (기본, 무료)</option>
+        <option value="gemini-2.5-flash-lite" data-i18n="model_flash_lite">Gemini 2.5 Flash Lite (무료, 빠름)</option>
+        <option value="gemini-2.5-pro" data-i18n="model_pro">Gemini 2.5 Pro (무료, 고품질)</option>
+        <option value="gemini-2.0-flash" data-i18n="model_2_flash">Gemini 2.0 Flash (6월 퇴역 예정)</option>
       </select>
     </div>
 
     <!-- 직접 입력 안내 -->
-    <div id="manual-info" class="manual-info" style="display:none;">
+    <div id="manual-info" class="manual-info" style="display:none;" data-i18n-html="manual_info">
       로컬 사전 기반으로 절 분리, 용어 태깅, 기초 품사 분류를 수행합니다.
       Gemini API를 사용하면 3단계 파이프라인(분절→분석→검증)을 통해 더 정확한 분석을 받을 수 있습니다.
     </div>
 
     <!-- 실행 버튼 -->
     <div class="action-group">
-      <button id="analyze-btn" class="btn-primary" type="button">분석 실행</button>
-      <button id="clear-btn" class="btn-secondary" type="button">초기화</button>
+      <button id="analyze-btn" class="btn-primary" type="button" data-i18n="btn_analyze">분석 실행</button>
+      <button id="clear-btn" class="btn-secondary" type="button" data-i18n="btn_clear">초기화</button>
     </div>
   </section>
 
@@ -64,50 +133,56 @@
 
     <!-- 원문 구조 분석 -->
     <div class="result-block">
-      <h3>원문 구조 분석</h3>
+      <h3 data-i18n="result_original">원문 구조 분석</h3>
       <div id="original-structure"></div>
     </div>
 
     <!-- 번역문 구조 분석 -->
     <div class="result-block">
-      <h3>번역문 구조 분석</h3>
+      <h3 data-i18n="result_translated">번역문 구조 분석</h3>
       <div id="translated-structure"></div>
     </div>
 
     <!-- 원문-번역 대응 관계 -->
     <div class="result-block">
-      <h3>원문-번역 대응 관계</h3>
+      <h3 data-i18n="result_alignment">원문-번역 대응 관계</h3>
       <div id="alignment-view"></div>
     </div>
 
     <!-- 문장 구조 해설 -->
     <div class="result-block">
-      <h3>문장 구조 해설</h3>
+      <h3 data-i18n="result_explanation">문장 구조 해설</h3>
       <div id="explanation-view"></div>
     </div>
 
     <!-- 핵심 어휘 카드 -->
     <div class="result-block">
-      <h3>핵심 어휘 카드</h3>
+      <h3 data-i18n="result_vocabulary">핵심 어휘 카드</h3>
       <div id="vocabulary-cards"></div>
     </div>
 
   </section>
 
   <!-- ───────── 푸터 ───────── -->
-  <footer>
-    TranslateDu — 로컬 실행 전용 학습 도구 · 분석 결과는 학술적 참고용이며 최종 판단은 연구자의 몫입니다.
+  <footer data-i18n="footer">
+    TranslateDu — 한문 불교 문헌 학습 도구 · 분석 결과는 학술적 참고용이며 최종 판단은 연구자의 몫입니다.
   </footer>
 
 </div>
 
+<!-- ───────── ONNX Runtime Web (OCR용) ───────── -->
+<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.17.0/dist/ort.min.js"></script>
+
 <!-- ───────── 스크립트 로드 (의존성 순서 준수) ───────── -->
 <script src="utils.js"></script>
 <script src="glossary.js"></script>
+<script src="i18n.js"></script>
 <script src="prompts.js"></script>
 <script src="storage.js"></script>
 <script src="parser.js"></script>
 <script src="renderer.js"></script>
+<script src="ocr.js"></script>
+<script src="handwriting.js"></script>
 <script src="app.js"></script>
 
 </body>

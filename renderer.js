@@ -62,7 +62,7 @@ function renderOriginalStructure(data) {
 
   const seg = data.segmentation;
   if (!seg) {
-    container.innerHTML = '<p class="empty-msg">분절 데이터가 없습니다.</p>';
+    container.innerHTML = '<p class="empty-msg">' + t('r_no_segmentation') + '</p>';
     return;
   }
 
@@ -71,7 +71,7 @@ function renderOriginalStructure(data) {
     const clauseSection = document.createElement('div');
     clauseSection.className = 'clause-section';
     const clauseTitle = document.createElement('h4');
-    clauseTitle.textContent = '절(句) 분리';
+    clauseTitle.textContent = t('r_clause_split');
     clauseSection.appendChild(clauseTitle);
 
     const clauseList = document.createElement('div');
@@ -79,7 +79,7 @@ function renderOriginalStructure(data) {
     seg.clauses.forEach((clause, idx) => {
       const tag = document.createElement('span');
       tag.className = 'clause-tag';
-      tag.textContent = `${idx + 1}. ${clause}`;
+      tag.textContent = `${idx + 1}. ${fixBrokenUnicode(clause || '')}`;
       clauseList.appendChild(tag);
     });
     clauseSection.appendChild(clauseList);
@@ -91,7 +91,7 @@ function renderOriginalStructure(data) {
     const tokenSection = document.createElement('div');
     tokenSection.className = 'token-section';
     const tokenTitle = document.createElement('h4');
-    tokenTitle.textContent = '어절 분절 분석';
+    tokenTitle.textContent = t('r_token_analysis');
     tokenSection.appendChild(tokenTitle);
 
     const tokenGrid = document.createElement('div');
@@ -109,14 +109,14 @@ function renderOriginalStructure(data) {
       // 표면형 (한자만 표시, 현토는 절 분리에서 확인)
       const surface = document.createElement('div');
       surface.className = 'token-surface';
-      surface.textContent = token.surface;
+      surface.textContent = sanitizeSurface(fixBrokenUnicode(token.surface));
       box.appendChild(surface);
 
       // 글자별 뜻
       if (token.char_gloss && token.char_gloss.length > 0) {
         const gloss = document.createElement('div');
         gloss.className = 'token-gloss';
-        gloss.textContent = token.char_gloss.join(', ');
+        gloss.textContent = fixBrokenUnicode(token.char_gloss.join(', '));
         box.appendChild(gloss);
       }
 
@@ -165,7 +165,7 @@ function renderOriginalStructure(data) {
       if (token.ambiguity && token.ambiguity.length > 0) {
         const amb = document.createElement('div');
         amb.className = 'token-ambiguity';
-        amb.textContent = '⚠ ' + token.ambiguity.join('; ');
+        amb.textContent = '⚠ ' + token.ambiguity.map(a => fixBrokenUnicode(typeof a === 'object' && a ? Object.values(a).filter(Boolean).join(': ') : String(a||''))).join('; ');
         box.appendChild(amb);
       }
 
@@ -191,7 +191,7 @@ function renderTranslatedStructure(data) {
 
   const parsing = data.parsing;
   if (!parsing) {
-    container.innerHTML = '<p class="empty-msg">번역 데이터가 없습니다.</p>';
+    container.innerHTML = '<p class="empty-msg">' + t('r_no_translation') + '</p>';
     return;
   }
 
@@ -199,7 +199,7 @@ function renderTranslatedStructure(data) {
   if (parsing.sentence_type) {
     const typeDiv = document.createElement('div');
     typeDiv.className = 'sentence-type';
-    typeDiv.innerHTML = `<strong>문장 유형:</strong> ${escapeHtml(parsing.sentence_type)}`;
+    typeDiv.innerHTML = `<strong>${t('r_sentence_type')}</strong> ${escapeHtml(fixBrokenUnicode(parsing.sentence_type || ''))}`;
     container.appendChild(typeDiv);
   }
 
@@ -207,7 +207,7 @@ function renderTranslatedStructure(data) {
   if (parsing.literal_translation) {
     const litDiv = document.createElement('div');
     litDiv.className = 'translation-block literal';
-    litDiv.innerHTML = `<h4>직역 (Literal Translation)</h4><p>${escapeHtml(parsing.literal_translation)}</p>`;
+    litDiv.innerHTML = `<h4>${t('r_literal')}</h4><p>${escapeHtml(fixBrokenUnicode(parsing.literal_translation || ''))}</p>`;
     container.appendChild(litDiv);
   }
 
@@ -215,7 +215,7 @@ function renderTranslatedStructure(data) {
   if (parsing.idiomatic_translation) {
     const idioDiv = document.createElement('div');
     idioDiv.className = 'translation-block idiomatic';
-    idioDiv.innerHTML = `<h4>의역 (Idiomatic Translation)</h4><p>${escapeHtml(parsing.idiomatic_translation)}</p>`;
+    idioDiv.innerHTML = `<h4>${t('r_idiomatic')}</h4><p>${escapeHtml(fixBrokenUnicode(parsing.idiomatic_translation || ''))}</p>`;
     container.appendChild(idioDiv);
   }
 
@@ -225,13 +225,13 @@ function renderTranslatedStructure(data) {
     if (ver.revised_literal_translation) {
       const revLit = document.createElement('div');
       revLit.className = 'translation-block revised';
-      revLit.innerHTML = `<h4>검증 후 수정 직역</h4><p>${escapeHtml(ver.revised_literal_translation)}</p>`;
+      revLit.innerHTML = `<h4>${t('r_revised_literal')}</h4><p>${escapeHtml(fixBrokenUnicode(ver.revised_literal_translation || ''))}</p>`;
       container.appendChild(revLit);
     }
     if (ver.revised_idiomatic_translation) {
       const revIdio = document.createElement('div');
       revIdio.className = 'translation-block revised';
-      revIdio.innerHTML = `<h4>검증 후 수정 의역</h4><p>${escapeHtml(ver.revised_idiomatic_translation)}</p>`;
+      revIdio.innerHTML = `<h4>${t('r_revised_idiomatic')}</h4><p>${escapeHtml(fixBrokenUnicode(ver.revised_idiomatic_translation || ''))}</p>`;
       container.appendChild(revIdio);
     }
   }
@@ -240,11 +240,15 @@ function renderTranslatedStructure(data) {
   if (parsing.grammar_points && parsing.grammar_points.length > 0) {
     const gpDiv = document.createElement('div');
     gpDiv.className = 'grammar-points';
-    gpDiv.innerHTML = '<h4>문법 포인트</h4>';
+    gpDiv.innerHTML = '<h4>' + t('r_grammar_points') + '</h4>';
     const ul = document.createElement('ul');
     parsing.grammar_points.forEach(gp => {
       const li = document.createElement('li');
-      li.textContent = gp;
+      if (typeof gp === 'object' && gp !== null) {
+        li.textContent = fixBrokenUnicode(Object.values(gp).filter(Boolean).join(': '));
+      } else {
+        li.textContent = fixBrokenUnicode(String(gp || ''));
+      }
       ul.appendChild(li);
     });
     gpDiv.appendChild(ul);
@@ -255,15 +259,38 @@ function renderTranslatedStructure(data) {
   if (parsing.buddhist_notes && parsing.buddhist_notes.length > 0) {
     const bnDiv = document.createElement('div');
     bnDiv.className = 'buddhist-notes';
-    bnDiv.innerHTML = '<h4>불교학 참고</h4>';
+    bnDiv.innerHTML = '<h4>' + t('r_buddhist_notes') + '</h4>';
     const ul = document.createElement('ul');
     parsing.buddhist_notes.forEach(bn => {
       const li = document.createElement('li');
-      li.textContent = bn;
+      if (typeof bn === 'object' && bn !== null) {
+        li.textContent = fixBrokenUnicode(Object.values(bn).filter(Boolean).join(': '));
+      } else {
+        li.textContent = fixBrokenUnicode(String(bn || ''));
+      }
       ul.appendChild(li);
     });
     bnDiv.appendChild(ul);
     container.appendChild(bnDiv);
+  }
+
+  // 그 외 참고 (지명·인물·왕조·시기 등)
+  if (parsing.other_notes && parsing.other_notes.length > 0) {
+    const onDiv = document.createElement('div');
+    onDiv.className = 'other-notes';
+    onDiv.innerHTML = '<h4>' + t('r_other_notes') + '</h4>';
+    const ul = document.createElement('ul');
+    parsing.other_notes.forEach(on => {
+      const li = document.createElement('li');
+      if (typeof on === 'object' && on !== null) {
+        li.textContent = fixBrokenUnicode(Object.values(on).filter(Boolean).join(': '));
+      } else {
+        li.textContent = fixBrokenUnicode(String(on || ''));
+      }
+      ul.appendChild(li);
+    });
+    onDiv.appendChild(ul);
+    container.appendChild(onDiv);
   }
 }
 
@@ -282,7 +309,7 @@ function renderAlignment(data) {
 
   const alignment = data.alignment;
   if (!alignment || alignment.length === 0) {
-    container.innerHTML = '<p class="empty-msg">대응 관계 데이터가 없습니다.</p>';
+    container.innerHTML = '<p class="empty-msg">' + t('r_no_alignment') + '</p>';
     return;
   }
 
@@ -293,12 +320,12 @@ function renderAlignment(data) {
   const thead = document.createElement('thead');
   thead.innerHTML = `
     <tr>
-      <th>원문 (Source)</th>
+      <th>${t('r_th_source')}</th>
       <th></th>
-      <th>번역 (Target)</th>
-      <th>관계</th>
-      <th>확신도</th>
-      <th>비고</th>
+      <th>${t('r_th_target')}</th>
+      <th>${t('r_th_relation')}</th>
+      <th>${t('r_th_confidence')}</th>
+      <th>${t('r_th_reason')}</th>
     </tr>
   `;
   table.appendChild(thead);
@@ -310,12 +337,12 @@ function renderAlignment(data) {
 
     const conf = item.confidence || 'unknown';
     tr.innerHTML = `
-      <td class="align-source">${escapeHtml(item.source_span || '')}</td>
+      <td class="align-source">${escapeHtml(sanitizeSurface(fixBrokenUnicode(item.source_span || '')))}</td>
       <td class="align-arrow">→</td>
-      <td class="align-target">${escapeHtml(item.target_span || '')}</td>
+      <td class="align-target">${escapeHtml(fixBrokenUnicode(item.target_span || ''))}</td>
       <td><span class="relation-badge relation-${(item.relation || '').replace(/:/g, '-')}">${escapeHtml(item.relation || '')}</span></td>
       <td><span class="conf-badge ${confidenceClass(conf)}">${confidenceLabel(conf)}</span></td>
-      <td class="align-reason">${escapeHtml(item.reason || '')}</td>
+      <td class="align-reason">${escapeHtml(fixBrokenUnicode(item.reason || ''))}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -338,19 +365,19 @@ function renderExplanation(data) {
 
   const comp = data.parsing?.components;
   if (!comp) {
-    container.innerHTML = '<p class="empty-msg">문장 구조 데이터가 없습니다.</p>';
+    container.innerHTML = '<p class="empty-msg">' + t('r_no_structure') + '</p>';
     return;
   }
 
   const components = [
-    { label: '조건 (Condition)', value: comp.condition, icon: '⟨조건⟩' },
-    { label: '주어 (Subject)', value: comp.subject, icon: '⟨주어⟩' },
-    { label: '부사어 (Adverbial)', value: comp.adverbial, icon: '⟨부사⟩' },
-    { label: '서술어 (Predicate)', value: comp.predicate, icon: '⟨서술⟩' },
-    { label: '목적어 (Object)', value: comp.object, icon: '⟨목적⟩' },
-    { label: '보어 (Complement)', value: comp.complement, icon: '⟨보어⟩' },
-    { label: '생략 요소 (Omitted)', value: comp.omitted_elements, icon: '⟨생략⟩' },
-    { label: '모호성 (Ambiguity)', value: comp.ambiguity, icon: '⟨?⟩' }
+    { label: t('r_condition'), value: comp.condition, icon: '⟨C⟩' },
+    { label: t('r_subject'), value: comp.subject, icon: '⟨S⟩' },
+    { label: t('r_adverbial'), value: comp.adverbial, icon: '⟨A⟩' },
+    { label: t('r_predicate'), value: comp.predicate, icon: '⟨P⟩' },
+    { label: t('r_object'), value: comp.object, icon: '⟨O⟩' },
+    { label: t('r_complement'), value: comp.complement, icon: '⟨Co⟩' },
+    { label: t('r_omitted'), value: comp.omitted_elements, icon: '⟨…⟩' },
+    { label: t('r_ambiguity'), value: comp.ambiguity, icon: '⟨?⟩' }
   ];
 
   const grid = document.createElement('div');
@@ -370,7 +397,7 @@ function renderExplanation(data) {
 
     const body = document.createElement('div');
     body.className = 'component-body';
-    body.textContent = val;
+    body.textContent = fixBrokenUnicode(typeof val === 'string' ? val : String(val||''));
 
     card.appendChild(header);
     card.appendChild(body);
@@ -384,11 +411,11 @@ function renderExplanation(data) {
   if (ver && ver.issues_found && ver.issues_found.length > 0) {
     const issueDiv = document.createElement('div');
     issueDiv.className = 'verification-issues';
-    issueDiv.innerHTML = '<h4>검증 결과</h4>';
+    issueDiv.innerHTML = '<h4>' + t('r_verification_result') + '</h4>';
     const ul = document.createElement('ul');
     ver.issues_found.forEach(issue => {
       const li = document.createElement('li');
-      li.textContent = issue;
+      li.textContent = fixBrokenUnicode(String(issue||''));
       ul.appendChild(li);
     });
     issueDiv.appendChild(ul);
@@ -399,11 +426,11 @@ function renderExplanation(data) {
   if (ver && ver.final_notes && ver.final_notes.length > 0) {
     const notesDiv = document.createElement('div');
     notesDiv.className = 'final-notes';
-    notesDiv.innerHTML = '<h4>최종 참고</h4>';
+    notesDiv.innerHTML = '<h4>' + t('r_final_notes') + '</h4>';
     const ul = document.createElement('ul');
     ver.final_notes.forEach(note => {
       const li = document.createElement('li');
-      li.textContent = note;
+      li.textContent = fixBrokenUnicode(String(note||''));
       ul.appendChild(li);
     });
     notesDiv.appendChild(ul);
@@ -419,10 +446,19 @@ function renderExplanation(data) {
 function formatComponentValue(value) {
   if (!value) return '';
   if (Array.isArray(value)) {
-    const filtered = value.filter(v => v && v.trim());
+    const filtered = value.map(v => {
+      if (!v) return '';
+      if (typeof v === 'object') {
+        return fixBrokenUnicode(Object.values(v).filter(Boolean).join(': '));
+      }
+      return fixBrokenUnicode(String(v));
+    }).filter(s => s.trim());
     return filtered.length > 0 ? filtered.join(', ') : '';
   }
-  return value.trim ? value.trim() : String(value);
+  if (typeof value === 'object') {
+    return fixBrokenUnicode(Object.values(value).filter(Boolean).join(': '));
+  }
+  return fixBrokenUnicode(String(value).trim());
 }
 
 
@@ -440,7 +476,7 @@ function renderVocabularyCards(data) {
 
   const tokens = data.segmentation?.tokens;
   if (!tokens || tokens.length === 0) {
-    container.innerHTML = '<p class="empty-msg">어휘 데이터가 없습니다.</p>';
+    container.innerHTML = '<p class="empty-msg">' + t('r_no_vocabulary') + '</p>';
     return;
   }
 
@@ -453,7 +489,7 @@ function renderVocabularyCards(data) {
   });
 
   if (vocabTokens.length === 0) {
-    container.innerHTML = '<p class="empty-msg">표시할 어휘가 없습니다.</p>';
+    container.innerHTML = '<p class="empty-msg">' + t('r_no_vocab_display') + '</p>';
     return;
   }
 
@@ -470,14 +506,14 @@ function renderVocabularyCards(data) {
     // 한자 (한자만 표시, 현토 제외)
     const charDiv = document.createElement('div');
     charDiv.className = 'vocab-char';
-    charDiv.textContent = token.surface;
+    charDiv.textContent = sanitizeSurface(fixBrokenUnicode(token.surface));
     card.appendChild(charDiv);
 
     // 독음 (폴백에서 제공하는 경우)
     if (token.reading) {
       const readingDiv = document.createElement('div');
       readingDiv.className = 'vocab-reading';
-      readingDiv.textContent = token.reading;
+      readingDiv.textContent = fixBrokenUnicode(token.reading || '');
       card.appendChild(readingDiv);
     }
 
@@ -485,7 +521,7 @@ function renderVocabularyCards(data) {
     if (token.char_gloss && token.char_gloss.length > 0) {
       const glossDiv = document.createElement('div');
       glossDiv.className = 'vocab-gloss';
-      glossDiv.textContent = token.char_gloss.join(', ');
+      glossDiv.textContent = fixBrokenUnicode(token.char_gloss.join(', '));
       card.appendChild(glossDiv);
     }
 
@@ -493,7 +529,7 @@ function renderVocabularyCards(data) {
     if (token.buddhist_meaning) {
       const bmDiv = document.createElement('div');
       bmDiv.className = 'vocab-buddhist-meaning';
-      bmDiv.textContent = token.buddhist_meaning;
+      bmDiv.textContent = fixBrokenUnicode(token.buddhist_meaning || '');
       card.appendChild(bmDiv);
     }
 
@@ -514,7 +550,7 @@ function renderVocabularyCards(data) {
     if (token.is_buddhist_term) {
       const badge = document.createElement('div');
       badge.className = 'vocab-badge';
-      badge.textContent = '불교 용어';
+      badge.textContent = t('r_buddhist_term');
       card.appendChild(badge);
     }
 
@@ -544,9 +580,9 @@ function renderFallbackNotice(isFallback) {
   notice.id = 'fallback-notice';
   notice.className = 'fallback-notice';
   notice.innerHTML = `
-    <strong>⚠ 로컬 분석 결과</strong>
-    <p>API 연결이 불가하여 로컬 사전 기반 분석 결과만 제공됩니다.</p>
-    <p>Gemini API Key를 입력하면 3단계 파이프라인(분절→분석→검증)을 통한 더 정확한 분석을 받을 수 있습니다.</p>
+    <strong>${t('r_fallback_title')}</strong>
+    <p>${t('r_fallback_msg1')}</p>
+    <p>${t('r_fallback_msg2')}</p>
   `;
   resultsSection.insertBefore(notice, resultsSection.firstChild);
 }
@@ -604,13 +640,13 @@ function renderDownloadButton(data) {
 
   const btn = document.createElement('button');
   btn.className = 'btn-primary';
-  btn.textContent = '분석 결과 HTML 다운로드';
+  btn.textContent = t('r_btn_download_html');
   btn.style.marginRight = '0.75rem';
   btn.addEventListener('click', () => downloadAnalysisHtml(data));
 
   const jsonBtn = document.createElement('button');
   jsonBtn.className = 'btn-secondary';
-  jsonBtn.textContent = 'JSON 원본 다운로드';
+  jsonBtn.textContent = t('r_btn_download_json');
   jsonBtn.addEventListener('click', () => downloadAnalysisJson(data));
 
   area.appendChild(btn);
@@ -660,28 +696,51 @@ function downloadAnalysisHtml(data) {
   const verification = data.verification || {};
   const isFallback = !!data._is_fallback;
 
+  // ── 출력 언어 감지 ──
+  const lang = typeof getSelectedOutputLang === 'function' ? getSelectedOutputLang() : 'ko';
+  const HTML_LANG_MAP = { ko: 'ko', en: 'en', ja: 'ja', 'zh-CN': 'zh-Hans', 'zh-TW': 'zh-Hant' };
+  const htmlLang = HTML_LANG_MAP[lang] || 'ko';
+
+  // ── 언어별 font-stack 동적 생성 ──
+  const FONT_STACKS = {
+    ko: "'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+    en: "'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans KR', sans-serif",
+    ja: "'Hiragino Kaku Gothic ProN', 'Noto Sans JP', 'Yu Gothic', 'Meiryo', -apple-system, sans-serif",
+    'zh-CN': "'Microsoft YaHei', 'PingFang SC', 'Noto Sans SC', 'Source Han Sans SC', sans-serif",
+    'zh-TW': "'Microsoft JhengHei', 'PingFang TC', 'Noto Sans TC', 'Source Han Sans TC', sans-serif",
+  };
+  const FONT_HANJA_STACKS = {
+    ko: "'Noto Serif KR', 'Noto Serif JP', 'Noto Serif SC', 'Noto Serif TC', 'Batang', serif",
+    en: "'Noto Serif SC', 'Noto Serif KR', 'Noto Serif JP', 'Noto Serif TC', 'SimSun', serif",
+    ja: "'Noto Serif JP', 'Hiragino Mincho ProN', 'Yu Mincho', 'Noto Serif SC', serif",
+    'zh-CN': "'Noto Serif SC', 'SimSun', 'FangSong', 'Noto Serif TC', serif",
+    'zh-TW': "'Noto Serif TC', 'PMingLiU', 'Noto Serif SC', 'MingLiU', serif",
+  };
+  const fontStack = FONT_STACKS[lang] || FONT_STACKS.ko;
+  const fontHanja = FONT_HANJA_STACKS[lang] || FONT_HANJA_STACKS.ko;
+
   // ── 원문 표시 (현토 하이라이트) ──
   const originalHtml = renderOriginalTextWithHyeonto(inputText);
 
   // ── 절 분리 ──
   const clausesHtml = (seg.clauses || []).map((c, i) =>
-    `<span class="clause-tag">${i + 1}. ${escapeHtml(c)}</span>`
+    `<span class="clause-tag">${i + 1}. ${escapeHtml(fixBrokenUnicode(c || ''))}</span>`
   ).join(' ');
 
   // ── 토큰 박스 ──
   const tokensHtml = (seg.tokens || []).map(t => {
     const isBuddh = t.is_buddhist_term;
     const cls = isBuddh ? 'token-box buddhist-term' : 'token-box';
-    const surfaceDisplay = escapeHtml(t.surface);
-    const gloss = (t.char_gloss || []).join(', ');
-    const posTags = (t.pos_candidates || []).map(p => `<span class="pos-tag">${escapeHtml(p)}</span>`).join(' ');
-    const funcTags = (t.function_candidates || []).map(f => `<span class="func-tag">${escapeHtml(f)}</span>`).join(' ');
+    const surfaceDisplay = escapeHtml(sanitizeSurface(fixBrokenUnicode(t.surface)));
+    const gloss = fixBrokenUnicode((t.char_gloss || []).join(', '));
+    const posTags = (t.pos_candidates || []).map(p => `<span class="pos-tag">${escapeHtml(fixBrokenUnicode(String(p||'')))}</span>`).join(' ');
+    const funcTags = (t.function_candidates || []).map(f => `<span class="func-tag">${escapeHtml(fixBrokenUnicode(String(f||'')))}</span>`).join(' ');
     const conf = t.confidence || 'unknown';
     const confCls = ({ high: 'conf-high', medium: 'conf-medium', low: 'conf-low' })[conf] || 'conf-unknown';
-    const confLbl = ({ high: '높음', medium: '보통', low: '낮음' })[conf] || '미정';
+    const confLbl = confidenceLabel(conf);
     const buddhMark = isBuddh ? '<span class="buddhist-mark">佛</span>' : '';
     const ambiguity = (t.ambiguity || []).length > 0
-      ? `<div class="token-ambiguity">⚠ ${escapeHtml(t.ambiguity.join('; '))}</div>` : '';
+      ? `<div class="token-ambiguity">⚠ ${escapeHtml(fixBrokenUnicode(t.ambiguity.map(a => typeof a === 'object' && a ? Object.values(a).filter(Boolean).join(': ') : String(a||'')).join('; ')))}</div>` : '';
 
     return `<div class="${cls}">
       ${buddhMark}
@@ -702,38 +761,39 @@ function downloadAnalysisHtml(data) {
   const sentenceType = parsing.sentence_type || '';
 
   // ── 문법 포인트 ──
-  const grammarHtml = (parsing.grammar_points || []).map(g => `<li>${escapeHtml(g)}</li>`).join('\n');
+  const grammarHtml = (parsing.grammar_points || []).map(g => { const s = fixBrokenUnicode(typeof g === 'object' && g ? Object.values(g).filter(Boolean).join(': ') : String(g||'')); return `<li>${escapeHtml(s)}</li>`; }).join('\n');
 
   // ── 불교학 참고 ──
-  const buddhistNotesHtml = (parsing.buddhist_notes || []).map(n => `<li>${escapeHtml(n)}</li>`).join('\n');
+  const buddhistNotesHtml = (parsing.buddhist_notes || []).map(n => { const s = fixBrokenUnicode(typeof n === 'object' && n ? Object.values(n).filter(Boolean).join(': ') : String(n||'')); return `<li>${escapeHtml(s)}</li>`; }).join('\n');
+  const otherNotesHtml = (parsing.other_notes || []).map(n => { const s = fixBrokenUnicode(typeof n === 'object' && n ? Object.values(n).filter(Boolean).join(': ') : String(n||'')); return `<li>${escapeHtml(s)}</li>`; }).join('\n');
 
   // ── Alignment ──
   const alignRows = alignment.map(a => {
     const conf = a.confidence || 'unknown';
     const confCls = ({ high: 'conf-high', medium: 'conf-medium', low: 'conf-low' })[conf] || 'conf-unknown';
-    const confLbl = ({ high: '높음', medium: '보통', low: '낮음' })[conf] || '미정';
+    const confLbl = confidenceLabel(conf);
     const relCls = 'relation-' + (a.relation || '').replace(/:/g, '-');
     return `<tr>
-      <td class="align-source">${escapeHtml(a.source_span || '')}</td>
+      <td class="align-source">${escapeHtml(sanitizeSurface(fixBrokenUnicode(a.source_span || '')))}</td>
       <td class="align-arrow">→</td>
-      <td class="align-target">${escapeHtml(a.target_span || '')}</td>
+      <td class="align-target">${escapeHtml(fixBrokenUnicode(a.target_span || ''))}</td>
       <td><span class="relation-badge ${relCls}">${escapeHtml(a.relation || '')}</span></td>
       <td><span class="conf-badge ${confCls}">${confLbl}</span></td>
-      <td class="align-reason">${escapeHtml(a.reason || '')}</td>
+      <td class="align-reason">${escapeHtml(fixBrokenUnicode(a.reason || ''))}</td>
     </tr>`;
   }).join('\n');
 
   // ── 문장 구조 ──
   const comp = parsing.components || {};
   const compEntries = [
-    ['조건 (Condition)', comp.condition],
-    ['주어 (Subject)', comp.subject],
-    ['부사어 (Adverbial)', comp.adverbial],
-    ['서술어 (Predicate)', comp.predicate],
-    ['목적어 (Object)', comp.object],
-    ['보어 (Complement)', comp.complement],
-    ['생략 요소 (Omitted)', comp.omitted_elements],
-    ['모호성 (Ambiguity)', comp.ambiguity],
+    [t('r_condition'), comp.condition],
+    [t('r_subject'), comp.subject],
+    [t('r_adverbial'), comp.adverbial],
+    [t('r_predicate'), comp.predicate],
+    [t('r_object'), comp.object],
+    [t('r_complement'), comp.complement],
+    [t('r_omitted'), comp.omitted_elements],
+    [t('r_ambiguity'), comp.ambiguity],
   ];
   const compHtml = compEntries
     .filter(([, val]) => {
@@ -760,14 +820,14 @@ function downloadAnalysisHtml(data) {
   const vocabHtml = vocabTokens.map(t => {
     const isBuddh = t.is_buddhist_term;
     const cls = isBuddh ? 'vocab-card vocab-buddhist' : 'vocab-card';
-    const surfaceDisplay = escapeHtml(t.surface);
+    const surfaceDisplay = escapeHtml(sanitizeSurface(fixBrokenUnicode(t.surface)));
     const reading = t.reading ? `<div class="vocab-reading">${escapeHtml(t.reading)}</div>` : '';
     const gloss = (t.char_gloss || []).length > 0
       ? `<div class="vocab-gloss">${escapeHtml(t.char_gloss.join(', '))}</div>` : '';
     const bm = t.buddhist_meaning
       ? `<div class="vocab-buddhist-meaning">${escapeHtml(t.buddhist_meaning)}</div>` : '';
     const posTags = (t.pos_candidates || []).map(p => `<span class="pos-tag">${escapeHtml(p)}</span>`).join(' ');
-    const badge = isBuddh ? '<div class="vocab-badge">불교 용어</div>' : '';
+    const badge = isBuddh ? `<div class="vocab-badge">${t('r_buddhist_term')}</div>` : '';
     return `<div class="${cls}">
       <div class="vocab-char">${surfaceDisplay}</div>
       ${reading}${gloss}${bm}
@@ -780,14 +840,17 @@ function downloadAnalysisHtml(data) {
 
   // ── 최종 HTML 조립 ──
   const html = `<!DOCTYPE html>
-<html lang="ko">
+<html lang="${htmlLang}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TranslateDu 분석 결과</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Noto+Serif+KR:wght@400;700&family=Noto+Sans+JP:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;700&family=Noto+Sans+SC:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;700&family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Serif+TC:wght@400;700&display=swap" rel="stylesheet">
+<title>${t('r_html_title')}</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--color-bg:#f8f9fa;--color-surface:#fff;--color-text:#212529;--color-text-secondary:#6c757d;--color-border:#dee2e6;--color-primary:#2c5282;--color-primary-light:#ebf4ff;--color-accent:#c05621;--color-accent-light:#fefcbf;--color-success:#276749;--color-success-bg:#f0fff4;--color-warning:#975a16;--color-warning-bg:#fffff0;--color-error:#c53030;--color-error-bg:#fff5f5;--color-info:#2b6cb0;--color-info-bg:#ebf8ff;--color-buddhist:#805ad5;--color-buddhist-bg:#faf5ff;--font-stack:'Pretendard','Noto Sans KR',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;--font-hanja:'Noto Serif KR','Batang',serif;--radius:6px;--shadow-sm:0 1px 2px rgba(0,0,0,0.06)}
+:root{--color-bg:#f8f9fa;--color-surface:#fff;--color-text:#212529;--color-text-secondary:#6c757d;--color-border:#dee2e6;--color-primary:#2c5282;--color-primary-light:#ebf4ff;--color-accent:#c05621;--color-accent-light:#fefcbf;--color-success:#276749;--color-success-bg:#f0fff4;--color-warning:#975a16;--color-warning-bg:#fffff0;--color-error:#c53030;--color-error-bg:#fff5f5;--color-info:#2b6cb0;--color-info-bg:#ebf8ff;--color-buddhist:#805ad5;--color-buddhist-bg:#faf5ff;--font-stack:${fontStack};--font-hanja:${fontHanja};--radius:6px;--shadow-sm:0 1px 2px rgba(0,0,0,0.06)}
 html{font-size:16px;line-height:1.6}
 body{font-family:var(--font-stack);color:var(--color-text);background:var(--color-bg);min-height:100vh}
 .container{max-width:960px;margin:0 auto;padding:2rem 1.5rem}
@@ -822,9 +885,9 @@ header .subtitle{font-size:0.875rem;color:var(--color-text-secondary)}
 .translation-block.literal{background:var(--color-info-bg);border-left:3px solid var(--color-info)}
 .translation-block.idiomatic{background:var(--color-success-bg);border-left:3px solid var(--color-success)}
 .translation-block.revised{background:var(--color-accent-light);border-left:3px solid var(--color-accent)}
-.grammar-points h4,.buddhist-notes h4{font-size:0.8rem;font-weight:600;color:var(--color-text-secondary);margin-bottom:0.4rem;margin-top:0.75rem}
-.grammar-points ul,.buddhist-notes ul{padding-left:1.25rem;font-size:0.85rem}
-.grammar-points li,.buddhist-notes li{margin-bottom:0.3rem}
+.grammar-points h4,.buddhist-notes h4,.other-notes h4{font-size:0.8rem;font-weight:600;color:var(--color-text-secondary);margin-bottom:0.4rem;margin-top:0.75rem}
+.grammar-points ul,.buddhist-notes ul,.other-notes ul{padding-left:1.25rem;font-size:0.85rem}
+.grammar-points li,.buddhist-notes li,.other-notes li{margin-bottom:0.3rem}
 .alignment-table{width:100%;border-collapse:collapse;font-size:0.85rem}
 .alignment-table th{background:var(--color-bg);padding:0.5rem 0.6rem;text-align:left;font-weight:600;font-size:0.75rem;color:var(--color-text-secondary);border-bottom:2px solid var(--color-border)}
 .alignment-table td{padding:0.5rem 0.6rem;border-bottom:1px solid var(--color-border);vertical-align:middle}
@@ -863,55 +926,56 @@ footer{text-align:center;padding:1.5rem 0;font-size:0.75rem;color:var(--color-te
 <body>
 <div class="container">
   <header>
-    <h1>TranslateDu 분석 결과</h1>
-    <p class="subtitle">생성 시각: ${escapeHtml(timestamp)}</p>
+    <h1>${t('r_html_title')}</h1>
+    <p class="subtitle">${t('r_html_timestamp')}: ${escapeHtml(timestamp)}</p>
   </header>
 
-  ${isFallback ? `<div class="fallback-notice"><strong>⚠ 로컬 분석 결과</strong><p>API 연결 불가로 로컬 사전 기반 분석 결과만 제공됩니다.</p></div>` : ''}
+  ${isFallback ? `<div class="fallback-notice"><strong>${t('r_html_fallback_title')}</strong><p>${t('r_html_fallback_msg')}</p></div>` : ''}
 
   <div class="section">
-    <h3>원문</h3>
+    <h3>${t('r_html_source_label')}</h3>
     <div class="original-text">${originalHtml}</div>
   </div>
 
   <div class="section">
-    <h3>원문 구조 분석</h3>
-    ${clausesHtml ? `<h4 style="font-size:0.85rem;color:var(--color-text-secondary);margin-bottom:0.5rem">절(句) 분리</h4><div style="margin-bottom:1rem">${clausesHtml}</div>` : ''}
-    ${tokensHtml ? `<h4 style="font-size:0.85rem;color:var(--color-text-secondary);margin-bottom:0.5rem">어절 분절 분석</h4><div class="token-grid">${tokensHtml}</div>` : ''}
+    <h3>${t('result_original')}</h3>
+    ${clausesHtml ? `<h4 style="font-size:0.85rem;color:var(--color-text-secondary);margin-bottom:0.5rem">${t('r_clause_split')}</h4><div style="margin-bottom:1rem">${clausesHtml}</div>` : ''}
+    ${tokensHtml ? `<h4 style="font-size:0.85rem;color:var(--color-text-secondary);margin-bottom:0.5rem">${t('r_token_analysis')}</h4><div class="token-grid">${tokensHtml}</div>` : ''}
   </div>
 
   <div class="section">
-    <h3>번역문 구조 분석</h3>
-    ${sentenceType ? `<div class="sentence-type"><strong>문장 유형:</strong> ${escapeHtml(sentenceType)}</div>` : ''}
-    ${litTrans ? `<div class="translation-block literal"><h4>직역</h4><p>${escapeHtml(litTrans)}</p></div>` : ''}
-    ${idioTrans ? `<div class="translation-block idiomatic"><h4>의역</h4><p>${escapeHtml(idioTrans)}</p></div>` : ''}
-    ${revLit ? `<div class="translation-block revised"><h4>검증 후 수정 직역</h4><p>${escapeHtml(revLit)}</p></div>` : ''}
-    ${revIdio ? `<div class="translation-block revised"><h4>검증 후 수정 의역</h4><p>${escapeHtml(revIdio)}</p></div>` : ''}
-    ${grammarHtml ? `<div class="grammar-points"><h4>문법 포인트</h4><ul>${grammarHtml}</ul></div>` : ''}
-    ${buddhistNotesHtml ? `<div class="buddhist-notes"><h4>불교학 참고</h4><ul>${buddhistNotesHtml}</ul></div>` : ''}
+    <h3>${t('result_translated')}</h3>
+    ${sentenceType ? `<div class="sentence-type"><strong>${t('r_sentence_type')}</strong> ${escapeHtml(sentenceType)}</div>` : ''}
+    ${litTrans ? `<div class="translation-block literal"><h4>${t('r_literal')}</h4><p>${escapeHtml(litTrans)}</p></div>` : ''}
+    ${idioTrans ? `<div class="translation-block idiomatic"><h4>${t('r_idiomatic')}</h4><p>${escapeHtml(idioTrans)}</p></div>` : ''}
+    ${revLit ? `<div class="translation-block revised"><h4>${t('r_revised_literal')}</h4><p>${escapeHtml(revLit)}</p></div>` : ''}
+    ${revIdio ? `<div class="translation-block revised"><h4>${t('r_revised_idiomatic')}</h4><p>${escapeHtml(revIdio)}</p></div>` : ''}
+    ${grammarHtml ? `<div class="grammar-points"><h4>${t('r_grammar_points')}</h4><ul>${grammarHtml}</ul></div>` : ''}
+    ${buddhistNotesHtml ? `<div class="buddhist-notes"><h4>${t('r_buddhist_notes')}</h4><ul>${buddhistNotesHtml}</ul></div>` : ''}
+    ${otherNotesHtml ? `<div class="other-notes"><h4>${t('r_other_notes')}</h4><ul>${otherNotesHtml}</ul></div>` : ''}
   </div>
 
   ${alignRows ? `<div class="section">
-    <h3>원문-번역 대응 관계</h3>
+    <h3>${t('result_alignment')}</h3>
     <table class="alignment-table">
-      <thead><tr><th>원문</th><th></th><th>번역</th><th>관계</th><th>확신도</th><th>비고</th></tr></thead>
+      <thead><tr><th>${t('r_th_source')}</th><th></th><th>${t('r_th_target')}</th><th>${t('r_th_relation')}</th><th>${t('r_th_confidence')}</th><th>${t('r_th_reason')}</th></tr></thead>
       <tbody>${alignRows}</tbody>
     </table>
   </div>` : ''}
 
   ${compHtml ? `<div class="section">
-    <h3>문장 구조 해설</h3>
+    <h3>${t('result_explanation')}</h3>
     <div class="component-grid">${compHtml}</div>
-    ${issuesHtml ? `<div class="verification-issues"><h4>검증 결과</h4><ul>${issuesHtml}</ul></div>` : ''}
-    ${finalNotesHtml ? `<div class="final-notes"><h4>최종 참고</h4><ul>${finalNotesHtml}</ul></div>` : ''}
+    ${issuesHtml ? `<div class="verification-issues"><h4>${t('r_verification_result')}</h4><ul>${issuesHtml}</ul></div>` : ''}
+    ${finalNotesHtml ? `<div class="final-notes"><h4>${t('r_final_notes')}</h4><ul>${finalNotesHtml}</ul></div>` : ''}
   </div>` : ''}
 
   ${vocabHtml ? `<div class="section">
-    <h3>핵심 어휘 카드</h3>
+    <h3>${t('result_vocabulary')}</h3>
     <div class="vocab-grid">${vocabHtml}</div>
   </div>` : ''}
 
-  <footer>TranslateDu — 분석 결과는 학술적 참고용이며 최종 판단은 연구자의 몫입니다.</footer>
+  <footer>${t('footer')}</footer>
 </div>
 </body>
 </html>`;

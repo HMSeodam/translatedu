@@ -11,7 +11,8 @@
 const STORAGE_KEYS = {
   API_KEY: 'translatedu_api_key',
   LAST_INPUT: 'translatedu_last_input',
-  TRANSLATION_MODE: 'translatedu_translation_mode'
+  TRANSLATION_MODE: 'translatedu_translation_mode',
+  OUTPUT_LANG: 'translatedu_output_lang'
 };
 
 // ───────── API Key ─────────
@@ -92,5 +93,32 @@ function loadTranslationMode() {
   } catch (e) {
     console.warn('[storage] 번역 모드 불러오기 실패:', e.message);
     return 'gemini';
+  }
+}
+
+// ───────── 출력 언어 ─────────
+
+/**
+ * 출력 언어를 localStorage에 저장.
+ * @param {string} lang - 'ko' | 'en' | 'ja'
+ */
+function saveOutputLang(lang) {
+  try {
+    localStorage.setItem(STORAGE_KEYS.OUTPUT_LANG, lang || 'ko');
+  } catch (e) {
+    console.warn('[storage] 출력 언어 저장 실패:', e.message);
+  }
+}
+
+/**
+ * 저장된 출력 언어를 반환.
+ * @returns {string}
+ */
+function loadOutputLang() {
+  try {
+    return localStorage.getItem(STORAGE_KEYS.OUTPUT_LANG) || 'ko';
+  } catch (e) {
+    console.warn('[storage] 출력 언어 불러오기 실패:', e.message);
+    return 'ko';
   }
 }

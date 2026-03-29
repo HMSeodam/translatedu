@@ -30,6 +30,9 @@ const MIME_TYPES = {
   '.jpg':  'image/jpeg',
   '.svg':  'image/svg+xml',
   '.ico':  'image/x-icon',
+  '.wasm': 'application/wasm',
+  '.yaml': 'text/yaml; charset=utf-8',
+  '.onnx': 'application/octet-stream',
 };
 
 // ───────── 정적 파일 서빙 ─────────
@@ -55,7 +58,11 @@ function serveStaticFile(req, res) {
       res.end(`파일을 찾을 수 없습니다: ${filePath}`);
       return;
     }
-    res.writeHead(200, { 'Content-Type': contentType });
+    res.writeHead(200, {
+      'Content-Type': contentType,
+      'Cross-Origin-Opener-Policy': 'same-origin',
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+    });
     res.end(data);
   });
 }
